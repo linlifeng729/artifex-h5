@@ -20,7 +20,6 @@
         <span class="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 text-[32px] font-bold leading-tight mb-1">登录 Wealth UP</span>
         <span class="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 text-[32px] font-bold leading-tight">发现有趣</span>
       </div>
-
       <!-- 手机号输入区域 -->
       <div class="mb-5">
         <div class="group relative text-white bg-white/5 border border-white/10 rounded-lg flex items-center backdrop-blur-sm shadow-md transition-all duration-300 px-4 focus-within:border-[#3cb371] focus-within:bg-white/10 focus-within:shadow-green-500/20">
@@ -49,10 +48,10 @@
           <button
             class="w-[75px] h-12 bg-[#3cb371] border-none text-white text-sm font-medium flex items-center justify-center rounded-lg shadow-md transition-all duration-300 active:scale-95"
             :class="{
-              'bg-white/10 text-gray-400 shadow-none': countdown > 0,
-              'opacity-50 cursor-not-allowed': !canSendCode
+              'bg-white/20 !text-white shadow-none': countdown > 0,
+              'opacity-50 cursor-not-allowed': countdown === 0 && !canSendCode
             }"
-            :disabled="!canSendCode"
+            :disabled="countdown === 0 && !canSendCode"
             @click="handleSendCodeClick"
           >
             {{ codeButtonText }}
@@ -61,7 +60,7 @@
       </div>
 
       <!-- 极验滑块验证容器 -->
-      <div id="geetest-captcha-container" class="mb-5"></div>
+      <div v-if="showGeetestContainer" id="geetest-captcha-container" class="mb-5"></div>
 
       <!-- 协议同意 -->
       <div class="mb-5">
@@ -112,6 +111,7 @@ const verificationCode = ref('')
 // 极验相关
 const geetestCaptcha = ref(null)
 const geetestValidateData = ref(null)
+const showGeetestContainer = ref(false)
 
 const cubes = ref([
   { style: { left: '8%', top: '12%', transform: 'rotateX(45deg) rotateY(25deg)', background: 'linear-gradient(135deg, #4a9eff, #6b73ff)' }, image: '' },
@@ -166,6 +166,9 @@ const startCountdown = () => {
 
 // 初始化极验滑块验证
 const initGeetest = () => {
+  // 显示极验容器
+  showGeetestContainer.value = true
+
   window.initGeetest4(
     {
       captchaId: import.meta.env.VITE_GEETEST_LOGIN_ID
@@ -203,7 +206,8 @@ const handleSendCodeClick = () => {
     return
   }
 
-  // 初始化极验
+  // 显示极验容器并初始化
+  showGeetestContainer.value = true
   initGeetest()
 }
 
@@ -227,6 +231,8 @@ const sendVerifyCodeWithCaptcha = async () => {
     startCountdown()
     // 清空验证数据，下次需要重新验证
     geetestValidateData.value = null
+    // 隐藏极验容器
+    showGeetestContainer.value = false
   } catch (error) {
     console.error('发送验证码失败:', error)
     showToast(error.message || '验证码发送失败，请重试')
@@ -253,7 +259,6 @@ const handleLogin = async () => {
     console.error('登录失败:', error)
     showToast(error.message || '登录失败，请重试')
     verificationCode.value = ''
-  } finally {
   }
 }
 
