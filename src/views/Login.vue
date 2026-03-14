@@ -1,5 +1,5 @@
 <template>
-  <div class="w-screen min-h-screen bg-black relative overflow-hidden flex flex-col">
+  <div id="login" class="w-screen min-h-screen bg-black relative overflow-hidden flex flex-col">
     <!-- 背景装饰 -->
     <div class="absolute inset-0 pointer-events-none">
       <div
@@ -53,12 +53,15 @@
               'opacity-50 cursor-not-allowed': !canSendCode
             }"
             :disabled="!canSendCode"
-            @click="sendVerifyCode"
+            @click="handleSendCodeClick"
           >
             {{ codeButtonText }}
           </button>
         </div>
       </div>
+
+      <!-- 极验滑块验证容器 -->
+      <div id="geetest-captcha-container" class="mb-5"></div>
 
       <!-- 协议同意 -->
       <div class="mb-5">
@@ -93,7 +96,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onUnmounted } from 'vue'
+import { ref, computed, onUnmounted, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast } from 'vant'
 import { sendVerificationCode, login } from '@/api/auth'
@@ -105,7 +108,10 @@ const isAgreed = ref(true)
 const countdown = ref(0)
 const timer = ref(null)
 const verificationCode = ref('')
-const loading = ref(false)
+
+// 极验相关
+const geetestCaptcha = ref(null)
+const geetestValidateData = ref(null)
 
 const cubes = ref([
   { style: { left: '8%', top: '12%', transform: 'rotateX(45deg) rotateY(25deg)', background: 'linear-gradient(135deg, #4a9eff, #6b73ff)' }, image: '' },
@@ -158,22 +164,72 @@ const startCountdown = () => {
   }, 1000)
 }
 
-const sendVerifyCode = async () => {
+// 初始化极验滑块验证
+const initGeetest = () => {
+  window.initGeetest4(
+    {
+      captchaId: import.meta.env.VITE_GEETEST_LOGIN_ID
+    },
+    (captcha) => {
+      geetestCaptcha.value = captcha
+
+      captcha.appendTo('#geetest-captcha-container')
+
+      captcha.onSuccess(() => {
+        geetestValidateData.value = captcha.getValidate()
+        captcha.reset()
+        // 验证成功后发送验证码
+        sendVerifyCodeWithCaptcha()
+      })
+
+      captcha.onError(() => {
+        showToast('验证失败，请重试')
+      })
+    }
+  )
+}
+
+// 点击发送验证码按钮 - 先触发滑块验证
+const handleSendCodeClick = () => {
   if (!canSendCode.value) return
   if (!validatePhone(phoneNumber.value)) {
     showToast('请输入正确的手机号')
     return
   }
+
+  // 如果已经有验证数据，直接发送
+  if (geetestValidateData.value) {
+    sendVerifyCodeWithCaptcha()
+    return
+  }
+
+  // 初始化极验
+  initGeetest()
+}
+
+// 带滑块验证的发送验证码
+const sendVerifyCodeWithCaptcha = async () => {
+  if (!geetestValidateData.value) {
+    showToast('请先完成滑块验证')
+    return
+  }
+
+  if (!validatePhone(phoneNumber.value)) {
+    showToast('请输入正确的手机号')
+    return
+  }
+
   try {
-    loading.value = true
-    await sendVerificationCode({ phone: phoneNumber.value })
-    showToast('验证码已发送')
+    await sendVerificationCode({
+      phone: phoneNumber.value,
+      ...geetestValidateData.value
+    })
     startCountdown()
+    // 清空验证数据，下次需要重新验证
+    geetestValidateData.value = null
   } catch (error) {
     console.error('发送验证码失败:', error)
     showToast(error.message || '验证码发送失败，请重试')
-  } finally {
-    loading.value = false
   }
 }
 
@@ -184,7 +240,6 @@ const handleLogin = async () => {
     return
   }
   try {
-    loading.value = true
     const result = await login({
       phone: phoneNumber.value,
       verificationCode: verificationCode.value
@@ -193,21 +248,29 @@ const handleLogin = async () => {
       localStorage.setItem('token', result.token)
       localStorage.setItem('userInfo', JSON.stringify(result.userInfo || {}))
     }
-    showToast('登录成功')
     router.replace('/')
   } catch (error) {
     console.error('登录失败:', error)
     showToast(error.message || '登录失败，请重试')
     verificationCode.value = ''
   } finally {
-    loading.value = false
   }
 }
+
+onMounted(async () => {
+  if (!window.initGeetest4) {
+    await import('https://static.geetest.com/v4/gt4.js')
+  }
+})
 
 onUnmounted(() => {
   if (timer.value) {
     clearInterval(timer.value)
     timer.value = null
+  }
+  // 销毁极验实例
+  if (geetestCaptcha.value?.destroy) {
+    geetestCaptcha.value.destroy()
   }
 })
 </script>
