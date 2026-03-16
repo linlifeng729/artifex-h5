@@ -17,8 +17,8 @@
     <div class="flex-1 px-6 py-[90px] flex flex-col">
       <!-- 标题 -->
       <div class="mb-[60px]">
-        <span class="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 text-[32px] font-bold leading-tight mb-1">登录 Wealth UP</span>
-        <span class="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 text-[32px] font-bold leading-tight">发现有趣</span>
+        <span class="block text-[32px] font-bold leading-tight mb-1" style="background: linear-gradient(to right, #60a5fa, #a855f7, #f472b6); -webkit-background-clip: text; background-clip: text; color: transparent;">登录 Artifex</span>
+        <span class="block text-[32px] font-bold leading-tight" style="background: linear-gradient(to right, #60a5fa, #a855f7, #f472b6); -webkit-background-clip: text; background-clip: text; color: transparent;">发现有趣</span>
       </div>
       <!-- 手机号输入区域 -->
       <div class="mb-5">
