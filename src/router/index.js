@@ -4,12 +4,12 @@ const routes = [
   {
     path: '/',
     name: 'Home',
-    component: import('@/views/Home/index.vue')
+    component: () => import('@/views/Home/index.vue')
   },
   {
     path: '/login',
     name: 'Login',
-    component: import('@/views/Login.vue')
+    component: () => import('@/views/Login.vue')
   },
   {
     path: '/:pathMatch(.*)*',
@@ -18,7 +18,7 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(import.meta.env.VITE_BASE_PATH),
   routes
 })
 

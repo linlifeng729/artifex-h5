@@ -1,132 +1,123 @@
 # Artifex-H5 Agent Guidelines
 
 ## Project Overview
-This is a Vue 3 project using Vite as the build tool, Tailwind CSS for styling, and Vant UI component library. The project implements a login interface with geetest captcha verification.
+Mobile NFT marketplace H5 app built with Vue 3.5+, Vite 7.0+, Vant 4.9+, Tailwind CSS 4.2+.
 
-## Development Commands
+## Build Commands
+```bash
+npm run dev          # Start dev server
+npm run dev:prod     # Dev server in production mode
+npm run build        # Production build
+npm run preview      # Preview production build
 
-### General Commands
-- `npm run dev` - Start development server
-- `npm run dev:prod` - Start development server in production mode
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build locally
+# Testing (not configured - see setup below)
+npm test             # Run tests with Vitest (watch mode)
+npm run test:run     # Run tests once
+npm run test:coverage # Run with coverage
+npm test -- --run src/utils/request.test.js # Run single test file
 
-### Testing
-No testing framework is currently configured in this project. To run tests, you would need to:
-1. Install a testing framework (e.g., Vitest, Jest)
-2. Configure it in vite.config.js
-3. Add test scripts to package.json
-
-### Linting
-No linting configuration is currently present. To add linting:
-1. Install ESLint: `npm install -D eslint @vitejs/plugin-vue`
-2. Create .eslintrc.js configuration
-3. Add lint script to package.json
+# Linting (not configured - see setup below)
+npm run lint         # Run ESLint
+npm run lint:fix     # Fix ESLint issues
+```
 
 ## Code Style Guidelines
 
-### File Organization
-- Components: `src/views/` for page-level components (Login.vue, Home.vue)
-- API: `src/api/` for service functions (auth.js, nft.js, nftInstances.js, index.js)
-- Router: `src/router/` for route definitions (index.js)
-- Assets: `src/assets/` for static assets (css/style.css, images/)
-- Main entry: `src/main.js`
-- App component: `src/App.vue`
-- Utilities: `src/utils/` for helper functions (request.js)
-
-### Vue 3 Composition API
-- Use `<script setup>` syntax for cleaner code (as seen in Login.vue)
-- Import composition API functions from 'vue': `ref`, `computed`, `onMounted`, `onUnmounted`, `watch`
-- Use reactive state with `ref()` for primitives and objects, `reactive()` for complex objects
-- Use `computed()` for derived state that depends on reactive state
-- Lifecycle hooks: `onMounted()` for initialization, `onUnmounted()` for cleanup
-- Template references with `ref()` for accessing DOM elements or component instances
-- Avoid mixing Options API and Composition API in the same component
-
 ### Imports
-- Use `@` alias for src directory: `import { sendVerificationCode, login } from '@/api/auth'`
-- Vue imports: `import { ref, computed, onUnmounted, onMounted } from 'vue'`
-- Vant components: `import { showToast } from 'vant'` (import only what you need)
-- Router: `import { useRouter } from 'vue-router'`
-- Environment variables: `import.meta.env.VITE_VARIABLE_NAME`
-- Group imports: 1) Vue/Vant/Vue Router, 2) API/services, 3) Components, 4) Utilities/helpers
-- Use relative paths (`./`, `../`) for local imports within the same directory
-- Always use the `@` alias for imports from src root
+- Use `@` alias for src: `import { http } from '@/utils/request'`
+- Vue Composition API from 'vue': `import { ref, computed, onMounted } from 'vue'`
+- Group: external libs -> internal modules -> components
 
-### Naming Conventions
-- Components: PascalCase (Login.vue, Home.vue)
-- Variables and functions: camelCase (phoneNumber, handleSendCodeClick, geetestCaptcha)
-- Constants: UPPER_SNAKE_CASE (rarely used, but when used: MAX_COUNT, API_TIMEOUT)
-- Files: kebab-case for utilities and helpers (request.js), PascalCase for components (Login.vue)
-- API functions: camelCase matching backend endpoints (sendVerificationCode, login)
-- Event handlers: prefixed with "handle" (handleSendCodeClick, handleLogin)
-- Boolean variables: prefixed with "is", "has", "can" (isAgreed, canSendCode, canLogin)
-- Timer variables: suffixed with "timer" (timer, countdownTimer)
-- Instance variables: suffixed with "Instance" or just descriptive (geetestCaptcha)
+### Vue 3 Conventions
+- Use `<script setup>` syntax
+- Use `ref()` for primitives/objects, `reactive()` for complex state
+- Use `computed()` for derived state
+- Clean up in `onUnmounted()` (timers, intervals, event listeners)
+- Avoid mixing Options API with Composition API
 
-### Styling
-- Tailwind CSS utility classes for layout and styling (w-full, h-12, bg-[#3cb371], etc.)
-- Custom CSS in `<style scoped>` blocks for component-specific styles and animations
-- CSS animations defined with `@keyframes` (as seen with float animation in Login.vue)
-- Responsive design with Tailwind's mobile-first approach (use sm:, md:, lg: prefixes when needed)
-- Dark/light themes using Tailwind's color system (not currently implemented but structure supports it)
-- Custom CSS classes should be scoped to prevent leakage
-- Use CSS variables for theme colors if implementing dark/light modes
-- Follow Tailwind's JIT mode principles - only use classes that are actually needed
-- Avoid !important unless absolutely necessary (seen in Login.vue for button states)
+### Naming
+- Components: PascalCase (`Login.vue`, `BottomNav.vue`)
+- Files/utils: kebab-case (`request.js`, `auth.js`)
+- Variables/functions: camelCase (`phoneNumber`, `handleLogin`)
+- Constants: UPPER_SNAKE_CASE (`MAX_RETRIES`, `API_TIMEOUT`)
+- Booleans: prefix `is`/`has`/`can` (`isLoading`, `canSubmit`)
+- Timers: suffix `timer` (`countdownTimer`)
 
-### Types and Data Handling
-- Props and emits not used in this Composition API setup (single-file components with script setup)
-- Data validation with regex patterns (e.g., phone validation: `/^1[3-9]\d{9}$/`)
-- Type inference from ref() values (phoneNumber is string, countdown is number)
-- API response handling with try/catch blocks (see sendVerifyCodeWithCaptcha and handleLogin)
-- LocalStorage for token and user info persistence (localStorage.setItem/getItem)
-- JSON serialization for storing objects in localStorage (JSON.stringify/parse)
-- Destructuring API responses when appropriate (`const { token, userInfo } = result`)
-- Default values for refs: `ref('')` for strings, `ref(0)` for numbers, `ref(null)` for objects
-- Avoid direct DOM manipulation; use template refs instead
+### API Layer
+```javascript
+// src/api/auth.js
+import { http } from '@/utils/request'
+
+export function login(data) {
+  return http.post('/auth/login', data)
+}
+```
+- Export from `src/api/index.js`
+- Use JSDoc for complex functions
+
+### Request Utils (src/utils/request.js)
+- Axios with 10s timeout
+- Auto-adds `Authorization: Bearer {token}` from localStorage
+- Response success: `data.code === 0 || data.success`
+- On 401: clear token, redirect to `/login`
+
+### Routing
+- Lazy load: `component: () => import('@/views/Login.vue')`
+- 404 catch: `path: '/:pathMatch(.*)*'`
 
 ### Error Handling
-- Try/catch blocks for async operations (API calls)
-- Toast notifications for user feedback using Vant's showToast (success/error messages)
-- Console.error for debugging development issues
-- Graceful degradation (e.g., checking if window.initGeetest4 exists before using)
-- User-friendly error messages (don't expose internal errors to users)
-- Loading states and button disabling during async operations
-- Form validation before API calls (phone number format, agreement checkbox)
-- Reset form fields on error (verification code cleared on login failure)
-- Specific error handling for third-party widgets (geetest onError callback)
+- Use `try/catch` for async operations
+- Show errors via Vant `showToast`
+- Never expose internal errors to users
+- Disable buttons during async operations
 
-### Specific Patterns from Codebase
-- Geetest captcha integration with async loading (load gt4.js on demand)
-- Countdown timers with setInterval/clearInterval (60-second resend code timer)
-- Form validation patterns (phone regex, agreement check, code length check)
-- Loading states and button disabling (based on canSendCode/computed properties)
-- Environment-based API proxy configuration (vite.config.js proxy based on VITE_API_PREFIX)
-- Third-party widget cleanup (destroy geetest instance on unmount)
-- Animated backgrounds with CSS keyframes (floating cubes)
-- Conditional rendering based on state (showGeetestContainer controls captcha display)
-- Computed properties for derived UI state (codeButtonText, canLogin, canSendCode)
-- Event delegation for agreement toggle (toggleAgreement function)
+### Styles
+- Tailwind CSS for layout/styling
+- Custom styles in `<style scoped>`
+- Avoid `!important`
+- Mobile-first: `sm:`, `md:`, `lg:` breakpoints
+
+### Data Types
+- Form validation via regex (phone: `/^1[3-9]\d{9}$/`)
+- Use `localStorage` for token/user persistence
+- `JSON.stringify/parse` for object storage
+
+## Project Structure
+```
+src/
+├── api/           # API modules (auth.js, nft.js, etc.)
+├── components/    # Shared components (BottomNav, TopHeader, etc.)
+├── router/        # Vue Router config
+├── utils/         # Helpers (request.js)
+├── views/         # Page components
+│   ├── Home/      # Home page + sub-components
+│   └── Login.vue  # Login page
+├── assets/        # CSS, images
+├── App.vue
+└── main.js
+```
+
+## Environment Variables
+- `VITE_API_PREFIX`: API base path (e.g., `/api`)
+- `VITE_GEETEST_LOGIN_ID`: Geetest captcha ID
 
 ## Best Practices
-1. Always validate form inputs before API calls (phone format, agreement, code length)
-2. Use computed properties for derived state (avoid recalculating in template)
-3. Clean up timers and intervals in onUnmounted (clearInterval)
-4. Destroy third-party widget instances (like Geetest) on unmount to prevent memory leaks
-5. Use meaningful commit messages that explain why, not just what
-6. Keep components focused and reusable (Login.vue handles login logic only)
-7. Follow Vue 3 reactivity principles (don't mutate refs directly without .value)
-8. Use Vant components consistently for UI elements (buttons, toasts)
-9. Handle edge cases in async operations (network errors, invalid responses)
-10. Maintain consistent indentation (2 spaces as seen in existing files)
-11. Use descriptive variable names that clearly indicate purpose
-12. Break complex functions into smaller, single-responsibility functions
-13. Add JSDoc comments for complex functions (not currently used but recommended)
-14. Use constants for magic numbers (60-second countdown could be named COUNTDOWN_SECONDS)
-15. Follow the existing code style in the project (don't introduce conflicting styles)
-16. Use template refs for accessing DOM elements when necessary
-17. Implement proper loading states for better UX
-18. Use environment variables for configuration (VITE_API_PREFIX, VITE_GEETEST_LOGIN_ID)
-19. Handle third-party script loading gracefully with fallbacks
-20. Clean up all resources (timers, intervals, event listeners, widget instances) on component unmount
+1. Validate forms before submission
+2. Clean up timers/intervals in `onUnmounted`
+3. Handle loading states for async operations
+4. Token expiry redirects to login automatically
+5. 2-space indentation
+6. No magic numbers - use constants
+
+## Testing Setup (Optional)
+```bash
+npm install -D vitest @vue/test-utils jsdom
+# Add to package.json: "test": "vitest"
+# Add to vite.config.js: test: { environment: 'jsdom', globals: true }
+```
+
+## Linting Setup (Optional)
+```bash
+npm install -D eslint @eslint/js eslint-plugin-vue
+# Add scripts: "lint": "eslint src --ext .js,.vue"
+```
