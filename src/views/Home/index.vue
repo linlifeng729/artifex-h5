@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen text-white" style="background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460); padding-bottom: 90px; padding-top: 75px;">
+  <div class="min-h-screen text-white" style="background: linear-gradient(160deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); padding-bottom: 90px; padding-top: 75px;">
     <TopHeader v-model="currentTabValue" :tabs="headerTabs" />
 
     <div class="mx-4 my-3">

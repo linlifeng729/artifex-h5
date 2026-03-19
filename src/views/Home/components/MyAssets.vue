@@ -61,7 +61,7 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue'
-import { getMyNftInstances } from '@/api/nftInstances'
+import { getMyNftInstances } from '@/api/nft'
 import LoadingState from '@/components/LoadingState.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import { showToast } from 'vant'

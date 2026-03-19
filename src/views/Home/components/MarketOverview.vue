@@ -22,7 +22,7 @@
           class="flex items-center justify-between h-[75px] px-3 py-3 border-b border-white/30"
           :class="{ 'border-b-0': index === filteredNftList.length - 1 }"
         >
-          <div class="flex items-center gap-2 h-full">
+          <div class="flex items-center gap-2 h-full" @click="handleItemClick(nft)">
             <div 
               class="w-10 h-10 rounded-full shrink-0 bg-cover bg-center bg-no-repeat border border-white/30"
               :style="{ backgroundImage: `url(${nft.image})` }"
@@ -45,6 +45,7 @@
         icon="🔍"
       />
     </div>
+    <CategoryDrawer ref="categoryDrawerRef" />
   </div>
 </template>
 
@@ -53,6 +54,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { getNftList } from '@/api/nft'
 import LoadingState from '@/components/LoadingState.vue'
 import EmptyState from '@/components/EmptyState.vue'
+import CategoryDrawer from './CategoryDrawer.vue'
 import { showToast } from 'vant'
 
 const props = defineProps({
@@ -123,6 +125,12 @@ const handleTabClick = (index) => {
   
   activeTabIndex.value = index
   loadNftList(props.searchKeyword)
+}
+
+const categoryDrawerRef = ref(null)
+
+const handleItemClick = (nft) => {
+  categoryDrawerRef.value?.openDrawer({ id: nft.id, name: nft.name })
 }
 
 const formatPrice = (price) => {

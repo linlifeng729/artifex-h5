@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => {
       proxy: {
         [env.VITE_API_PREFIX]: {
           // target: 'http://127.0.0.1:12600/',
-          target: 'http://113.45.133.164:12600',
+          target: 'http://113.45.133.164:12600/',
           changeOrigin: true
         }
       }
