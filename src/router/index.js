@@ -12,6 +12,11 @@ const routes = [
     component: () => import('@/views/Login.vue')
   },
   {
+    path: '/nft-detail/:id',
+    name: 'NftDetail',
+    component: () => import('@/views/Home/components/NftDetail.vue')
+  },
+  {
     path: '/:pathMatch(.*)*',
     redirect: '/'
   }

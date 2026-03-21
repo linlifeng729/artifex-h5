@@ -81,11 +81,13 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { Popup as VanPopup, Loading as VanLoading } from 'vant'
 import LoadingState from '@/components/LoadingState.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import { getNftInstanceList } from '@/api/nft'
 
+const router = useRouter()
 const showDrawer = ref(false)
 const loading = ref(false)
 const finished = ref(false)
@@ -179,8 +181,7 @@ const handleClose = () => {
 }
 
 const handleItemClick = (item) => {
-  // TODO: 跳转到 NFT 详情页
-  console.log('点击 NFT:', item)
+  router.push(`/nft-detail/${item.id}`)
 }
 
 defineExpose({ openDrawer })
