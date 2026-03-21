@@ -1,20 +1,11 @@
 <template>
-  <div class="min-h-screen pb-24" style="background: linear-gradient(160deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);">
+  <div class="min-h-screen pb-20" style="background: linear-gradient(160deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);">
     <!-- 顶部导航 -->
-    <div class="sticky top-0 z-10 px-4 pb-3" style="background: linear-gradient(160deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); padding-top: env(safe-area-inset-top);">
-      <div class="flex items-center justify-between h-10">
-        <button
-          class="w-8 h-8 flex items-center justify-center bg-white/10 rounded-full border-none cursor-pointer transition-colors active:bg-white/20"
-          @click="handleBack"
-        >
-          <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-            <path d="M12.5 15L7.5 10L12.5 5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-        <span class="text-sm font-medium text-white">商品详情</span>
-        <div class="w-8"></div>
-      </div>
-    </div>
+    <DrawerHeader
+      title="商品详情"
+      :show-right="false"
+      @left="handleBack"
+    />
 
     <!-- 内容区域 -->
     <div class="px-3 pt-4" v-if="!loading && detail">
@@ -25,11 +16,31 @@
           :style="{ backgroundImage: `url(${detail.nft?.image || '/placeholder.png'})` }"
         >
           <div
-            v-if="detail.status === 'available'"
+            v-if="detail.status"
             class="absolute top-2.5 right-2.5 px-2.5 py-1 text-[10px] font-medium text-white rounded-full"
             style="background: linear-gradient(135deg, #3cb371, #2ea55f);"
           >
-            可购买
+            {{ getStatusText(detail.status) }}
+          </div>
+        </div>
+      </div>
+
+      <!-- 拥有者信息 -->
+      <div class="bg-white/8 backdrop-blur-[10px] border border-white/10 rounded-xl p-4 mb-3">
+        <div class="flex items-center gap-2.5">
+          <div
+            class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold text-white flex-shrink-0"
+            style="background: linear-gradient(135deg, #667eea, #764ba2);"
+          >
+            {{ getAvatarText(detail.owner?.nickname) }}
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="text-sm text-white truncate">{{ detail.owner?.nickname || '未知用户' }}</div>
+            <div class="text-[10px] text-white/50">当前持有者</div>
+          </div>
+          <div class="flex-shrink-0 text-right">
+            <div class="text-[10px] text-white/50">编号</div>
+            <div class="text-xs font-medium text-white">#{{ detail.nftNumber || '无' }}</div>
           </div>
         </div>
       </div>
@@ -45,43 +56,35 @@
         </div>
       </div>
 
+      <!-- 支付方式选择 -->
+      <div class="bg-white/8 backdrop-blur-[10px] border border-white/10 rounded-xl p-4 mb-3" v-if="detail.status === 'available'">
+        <div class="text-[10px] font-medium text-white/50 uppercase tracking-wide mb-2">支付方式</div>
+        <div class="flex items-center gap-2">
+          <div
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs cursor-pointer transition-all border"
+            :class="paymentType === PaymentType.Alipay
+              ? 'border-[#3cb371] bg-[#3cb371]/20 text-[#3cb371]'
+              : 'border-white/20 text-white/50'"
+            @click="paymentType = PaymentType.Alipay"
+          >
+            支付宝
+          </div>
+          <div
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs cursor-pointer transition-all border"
+            :class="paymentType === PaymentType.WeChat
+              ? 'border-[#3cb371] bg-[#3cb371]/20 text-[#3cb371]'
+              : 'border-white/20 text-white/50'"
+            @click="paymentType = PaymentType.WeChat"
+          >
+            微信
+          </div>
+        </div>
+      </div>
+
       <!-- 商品描述 -->
       <div class="bg-white/8 backdrop-blur-[10px] border border-white/10 rounded-xl p-4 mb-3" v-if="detail.remark">
         <div class="text-[10px] font-medium text-white/50 uppercase tracking-wide mb-2">商品描述</div>
         <div class="text-xs leading-relaxed text-white/80">{{ detail.remark }}</div>
-      </div>
-
-      <!-- 拥有者信息 -->
-      <div class="bg-white/8 backdrop-blur-[10px] border border-white/10 rounded-xl p-4 mb-3">
-        <div class="text-[10px] font-medium text-white/50 uppercase tracking-wide mb-2">拥有者</div>
-        <div class="flex items-center gap-2.5">
-          <div
-            class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold text-white flex-shrink-0"
-            style="background: linear-gradient(135deg, #667eea, #764ba2);"
-          >
-            {{ getAvatarText(detail.owner?.nickname) }}
-          </div>
-          <div class="flex-1 min-w-0">
-            <div class="text-sm text-white truncate">{{ detail.owner?.nickname || '未知用户' }}</div>
-            <div class="text-[10px] text-white/50">当前持有者</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 商品编号 -->
-      <div class="bg-white/8 backdrop-blur-[10px] border border-white/10 rounded-xl p-4">
-        <div class="grid grid-cols-2 gap-3">
-          <div class="flex flex-col gap-0.5">
-            <span class="text-[10px] text-white/50">编号</span>
-            <span class="text-xs font-medium text-white">#{{ detail.nftNumber || '无' }}</span>
-          </div>
-          <div class="flex flex-col gap-0.5">
-            <span class="text-[10px] text-white/50">状态</span>
-            <span class="text-xs font-medium" :class="getStatusClass(detail.status)">
-              {{ getStatusText(detail.status) }}
-            </span>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -124,6 +127,8 @@
       </van-button>
     </div>
 
+    <PaymentComponent ref="paymentComponentRef" />
+
     <!-- 错误状态 -->
     <empty-state
       v-if="!loading && error"
@@ -143,9 +148,13 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { showToast, Button as VanButton } from 'vant'
+import { Button as VanButton } from 'vant'
 import EmptyState from '@/components/EmptyState.vue'
+import PaymentComponent from '@/components/paymentComponent.vue'
+import DrawerHeader from '@/components/DrawerHeader.vue'
 import { getNftInstanceDetail } from '@/api/nft'
+import { PaymentType } from '@/utils/constants'
+import { isWechat } from '@/utils/index'
 
 const router = useRouter()
 const route = useRoute()
@@ -154,6 +163,8 @@ const loading = ref(false)
 const error = ref(null)
 const detail = ref(null)
 const purchasing = ref(false)
+const paymentType = ref(PaymentType.WeChat)
+const paymentComponentRef = ref(null)
 
 const loadDetail = async () => {
   const id = route.params.id
@@ -189,7 +200,14 @@ const handlePurchase = async () => {
 
   purchasing.value = true
   try {
-    showToast('购买功能开发中')
+    const paymentInfo = {
+      goodsId: detail.value.nft?.id || detail.value.id,
+      goodsType: 'nft_instance',
+      description: detail.value.nft?.name || 'NFT商品',
+      amount: detail.value.price,
+      paymentType: paymentType.value,
+    }
+    paymentComponentRef.value?.startPaying(paymentInfo)
   } finally {
     purchasing.value = false
   }
@@ -200,25 +218,26 @@ const getAvatarText = (nickname) => {
   return nickname.slice(0, 2).toUpperCase()
 }
 
-const getStatusClass = (status) => {
-  const map = {
-    available: 'text-[#3cb371]',
-    sold: 'text-red-400',
-    reserved: 'text-yellow-400'
-  }
-  return map[status] || 'text-white'
-}
-
 const getStatusText = (status) => {
   const map = {
     available: '可购买',
     sold: '已售出',
     reserved: '预留中'
   }
-  return map[status] || '未知'
+  return map[status] || ''
 }
 
 onMounted(() => {
-  loadDetail()
+  initPage()
 })
+
+const initPage = () => {
+  // 如果在微信环境，默认选择微信支付
+  if (isWechat()) {
+    paymentType.value = PaymentType.WeChat
+  } else {
+    paymentType.value = PaymentType.Alipay
+  }
+  loadDetail()
+}
 </script>

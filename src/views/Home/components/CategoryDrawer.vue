@@ -6,20 +6,11 @@
     @close="handleClose"
   >
     <div class="flex flex-col h-full">
-      <!-- 顶部栏 -->
-      <div class="flex items-center justify-center p-4 relative border-b border-white/10">
-        <h3 class="text-base font-medium bg-gradient-to-r from-blue-400 via-purple-500 to-pink-400 bg-clip-text text-transparent">
-          {{ currentCategory.name || '商品列表' }}
-        </h3>
-        <div
-          class="absolute right-4 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center bg-white/10 rounded-full cursor-pointer hover:bg-white/20 transition-colors"
-          @click="handleClose"
-        >
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <path d="M1 1L13 13M1 13L13 1" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-        </div>
-      </div>
+      <DrawerHeader
+        title="商品列表"
+        :show-left="false"
+        @right="handleClose"
+      />
 
       <!-- 排序切换 -->
       <div class="flex gap-2 px-4 py-3 border-b border-white/10 overflow-x-auto [&::-webkit-scrollbar]:hidden">
@@ -85,6 +76,7 @@ import { useRouter } from 'vue-router'
 import { Popup as VanPopup, Loading as VanLoading } from 'vant'
 import LoadingState from '@/components/LoadingState.vue'
 import EmptyState from '@/components/EmptyState.vue'
+import DrawerHeader from '@/components/DrawerHeader.vue'
 import { getNftInstanceList } from '@/api/nft'
 
 const router = useRouter()
@@ -159,12 +151,9 @@ const resetState = () => {
 const openDrawer = async (category) => {
   resetState()
   categoryId.value = category.id || null
-  currentCategory.value.name = category.name || '商品列表'
   showDrawer.value = true
   await loadData()
 }
-
-const currentCategory = ref({ name: '' })
 
 const handleSortChange = async (value) => {
   if (sortType.value === value) return
