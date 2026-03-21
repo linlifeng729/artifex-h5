@@ -19,10 +19,11 @@
         <div 
           v-for="(nft, index) in filteredNftList" 
           :key="nft.id" 
-          class="flex items-center justify-between h-[75px] px-3 py-3 border-b border-white/30"
+          class="flex items-center justify-between h-[75px] px-3 py-3 border-b border-white/30 cursor-pointer hover:bg-white/5 transition-colors"
           :class="{ 'border-b-0': index === filteredNftList.length - 1 }"
+          @click="handleItemClick(nft)"
         >
-          <div class="flex items-center gap-2 h-full" @click="handleItemClick(nft)">
+          <div class="flex items-center gap-2 h-full">
             <div 
               class="w-10 h-10 rounded-full shrink-0 bg-cover bg-center bg-no-repeat border border-white/30"
               :style="{ backgroundImage: `url(${nft.image})` }"
@@ -134,10 +135,10 @@ const handleItemClick = (nft) => {
 }
 
 const formatPrice = (price) => {
-  if (!price) return '¥0'
-  const numPrice = parseFloat(price)
-  if (isNaN(numPrice)) return '¥0'
-  return `¥${numPrice.toLocaleString()}`
+  if (!price) return '¥0.00'
+  const numPrice = parseFloat(price) / 100
+  if (isNaN(numPrice)) return '¥0.00'
+  return `¥${numPrice.toFixed(2)}`
 }
 
 onMounted(() => {

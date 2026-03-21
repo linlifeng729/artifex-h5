@@ -92,7 +92,6 @@ const finished = ref(false)
 const page = ref(1)
 const sortType = ref('latest')
 const nftList = ref([])
-const scrollContainer = ref(null)
 const categoryId = ref(null)
 
 const sortOptions = [
