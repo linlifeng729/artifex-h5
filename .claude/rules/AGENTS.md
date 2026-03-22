@@ -34,9 +34,30 @@ Usage notes:
 </rule>
 
 <rule>
-<name>api-integration</name>
-<description>API 对接规范：接口命名、请求/响应格式、错误处理、文档约定。所有 API 定义在 src/api/ 目录下，按业务域拆分为 auth.js、nft.js等模块。响应格式使用 code === 0 判断成功。请求拦截器自动注入 Bearer Token。401 响应自动清除 token 并跳转登录页。</description>
-<path>.claude/rules/frontend/AGENTS.md</path>
+<name>api-integration-rules</name>
+<description>接口联调规范：完整的接口联调工作流，包含 GetApiDoc/GetApiDescription/GetApiMock MCP 工具使用、API 模块组织（kebab-case 文件命名）、函数命名规范（camelCase）、JSDoc 类型定义、错误处理模式（HTTP 拦截器/业务错误码/组件级处理）、Mock 测试验证、请求/响应类型定义规范。</description>
+<path>.claude/skills/api-integration/SKILL.md</path>
+<globs>src/api/**/*.{vue,js}</globs>
+</rule>
+
+<rule>
+<name>api-naming</name>
+<description>API 命名规范：文件命名（kebab-case）、函数命名（camelCase）、RESTful 端点规范、参数命名、TypeScript/JSDoc 类型定义约定。</description>
+<path>.claude/skills/api-integration/references/api-naming.md</path>
+<globs>src/api/**/*.{vue,js}</globs>
+</rule>
+
+<rule>
+<name>api-error-handling</name>
+<description>API 错误处理规范：三层错误分类（HTTP 状态码/业务错误码/前端校验）、拦截器处理模式、组件级 try-catch 结构、支付/列表/表单等常见场景错误处理模板。</description>
+<path>.claude/skills/api-integration/references/error-handling.md</path>
+<globs>src/api/**/*.{vue,js}</globs>
+</rule>
+
+<rule>
+<name>api-request-response</name>
+<description>请求/响应类型定义规范：JSDoc 类型注释、列表/详情/创建接口模板、分页/排序/ID 参数规范、成功/失败响应格式、时间格式约定。</description>
+<path>.claude/skills/api-integration/references/request-response.md</path>
 <globs>src/api/**/*.{vue,js}</globs>
 </rule>
 

@@ -1,6 +1,5 @@
 import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import tailwindcss from '@tailwindcss/vite'
 import { fileURLToPath, URL } from 'node:url'
 
 // https://vite.dev/config/
@@ -10,7 +9,6 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       vue(),
-      tailwindcss(),
     ],
     resolve: {
       alias: {
@@ -20,8 +18,8 @@ export default defineConfig(({ mode }) => {
     server: {
       proxy: {
         [env.VITE_API_PREFIX]: {
-          // target: 'http://127.0.0.1:12600/',
-          target: 'http://113.45.133.164:12600/',
+          target: 'http://127.0.0.1:12600/',
+          // target: 'http://113.45.133.164:12600/',
           changeOrigin: true
         }
       }

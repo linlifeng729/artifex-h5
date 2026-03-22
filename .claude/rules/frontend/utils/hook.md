@@ -43,9 +43,8 @@ const res = await http.delete('/nft-instances', { id })
 ### 文件命名
 `src/api/` 下按业务域命名：
 - `auth.js` - 用户认证
-- `nft.js` - NFT 类型
-- `nft.js` - NFT 实例
-- `index.js` - 统一导出
+- `nft.js` - NFT 类型、NFT 实例上下架/我的资产
+- `payment.js` - 微信支付、支付宝
 
 ### API 函数命名
 | 函数名 | 说明 |

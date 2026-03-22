@@ -90,8 +90,8 @@ onUnmounted(() => {
 
 ### 按业务域拆分
 - `src/api/auth.js` - 登录、验证码
-- `src/api/nft.js` - NFT 类型列表/详情
-- `src/api/nft.js` - NFT 实例上下架/我的资产
+- `src/api/nft.js` - NFT 类型列表/详情、NFT 实例上下架/我的资产
+- `src/api/payment.js` - 微信支付、支付宝
 - `src/api/index.js` - 统一导出
 
 ### 请求工具 (`@/utils/request`)

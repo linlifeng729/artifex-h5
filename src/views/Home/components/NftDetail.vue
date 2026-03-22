@@ -201,8 +201,7 @@ const handlePurchase = async () => {
   purchasing.value = true
   try {
     const paymentInfo = {
-      goodsId: detail.value.nft?.id || detail.value.id,
-      goodsType: 'nft_instance',
+      goodsId: detail.value.nft?.id,
       description: detail.value.nft?.name || 'NFT商品',
       amount: detail.value.price,
       paymentType: paymentType.value,

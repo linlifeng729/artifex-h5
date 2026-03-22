@@ -1,4 +1,6 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* 极验滑块验证样式 */
 .geetest_logo, .geetest_feedback, .geetest_footer_right {

@@ -20,8 +20,8 @@ Artifex 移动端 NFT 数字藏品交易平台 H5 应用。
 src/
 ├── api/                    # API 模块（按业务域拆分）
 │   ├── auth.js             # 用户认证（登录、验证码）
-│   ├── nft.js              # NFT 商品类型（列表、详情）
-│   ├── nft.js      # NFT 商品实例（上下架、我的资产）
+│   ├── nft.js              # NFT 商品类型（列表、详情）、NFT 商品实例（上下架、我的资产）
+│   ├── payment.js          # 微信支付、支付宝
 │   └── index.js            # 统一导出入口
 ├── components/             # 通用组件
 │   ├── TopHeader.vue        # 顶部导航栏
@@ -66,11 +66,18 @@ import TopHeader from '@/components/TopHeader.vue'
 ```
 
 ### API 请求层
-所有 API 统一封装在 `src/api/` 下，按业务域拆分模块（auth、nft、nftInstances 等）。
+所有 API 统一封装在 `src/api/` 下，按业务域拆分模块（auth、nft、payment）。
 使用 `src/utils/request.js` 封装的 `http` 对象：
 - 自动携带 `Authorization: Bearer {token}`
 - 响应成功判断：`data.code === 0 || data.success`
 - 401 自动跳转登录页
+
+组件中调用支付接口的正确方式：
+```javascript
+import { createWechatPayOrder, createAlipayOrder } from '@/api'
+// ✅ 正确：通过 API 模块调用
+// ❌ 错误：import { http } from '@/utils/request'; http.post('/wechatPay/createOrder', ...)
+```
 
 ### 响应数据规范
 - 成功：`{ code: 0, data: {...} }` 或 `{ success: true, data: {...} }`
