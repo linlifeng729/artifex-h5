@@ -158,7 +158,7 @@ function wechatQrCodePayment(paymentInfo) {
   }
 
   createPayOrder(createOrderParams).then((res) => {
-    QRCode.toDataURL(res.paymentLink).then((url) => {
+    QRCode.toDataURL(res.data).then((url) => {
       qrCodeDialog.visible = true
       qrCodeDialog.imageUrl = url
     }).catch((error) => {
@@ -183,10 +183,10 @@ function alipayPayment(paymentInfo) {
   }
 
   createPayOrder(createOrderParams).then((res) => {
-    if (res.paymentLink) {
+    if (res.data) {
       const wrapper = document.createElement('div')
       wrapper.style.display = 'none'
-      wrapper.innerHTML = res.paymentLink
+      wrapper.innerHTML = res.data
       document.body.appendChild(wrapper)
       const form = wrapper.querySelector('form')
       if (form) {
