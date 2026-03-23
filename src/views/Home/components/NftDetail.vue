@@ -65,7 +65,7 @@
             :class="paymentType === PaymentType.Alipay
               ? 'border-[#3cb371] bg-[#3cb371]/20 text-[#3cb371]'
               : 'border-white/20 text-white/50'"
-            v-if="!isWechatBrowser()"
+            v-if="!isWechat()"
             @click="paymentType = PaymentType.Alipay"
           >
             支付宝
