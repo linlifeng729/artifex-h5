@@ -65,6 +65,7 @@
             :class="paymentType === PaymentType.Alipay
               ? 'border-[#3cb371] bg-[#3cb371]/20 text-[#3cb371]'
               : 'border-white/20 text-white/50'"
+            v-if="!isWechatBrowser()"
             @click="paymentType = PaymentType.Alipay"
           >
             支付宝
@@ -154,7 +155,7 @@ import PaymentComponent from '@/components/paymentComponent.vue'
 import DrawerHeader from '@/components/DrawerHeader.vue'
 import { getNftInstanceDetail } from '@/api/nft'
 import { PaymentType } from '@/utils/constants'
-import { isWechat } from '@/utils/index'
+import { isWechat, isWechatBrowser } from '@/utils/index'
 
 const router = useRouter()
 const route = useRoute()
