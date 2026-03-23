@@ -84,13 +84,18 @@ function wechatMpPayment(paymentInfo) {
     amount: paymentInfo.amount,
     openid: sessionStorage.getItem(WX_MP_OPENID_KEY),
   }
-
   createPayOrder(createOrderParams).then((res) => {
     wx.miniProgram.navigateTo({
       url: `/pages/paymentProcess/index?paymentInfo=${encodeURIComponent(JSON.stringify(res))}`,
+      success() {
+        showToast('正在发起支付，请稍等')
+      },
+      fail(error) {
+        showToast(error?.message || '支付发起失败')
+      }
     })
-  }).catch((err) => {
-    showToast(err?.message || '支付发起失败')
+  }).catch((error) => {
+    showToast(error?.message || '支付发起失败')
   })
 }
 
@@ -153,8 +158,12 @@ function wechatQrCodePayment(paymentInfo) {
   }
 
   createPayOrder(createOrderParams).then((res) => {
-    qrCodeDialog.visible = true
-    qrCodeDialog.imageUrl = res.paymentLink
+    QRCode.toDataURL(res.paymentLink).then((url) => {
+      qrCodeDialog.visible = true
+      qrCodeDialog.imageUrl = url
+    }).catch((error) => {
+      showToast(error || '二维码生成失败')
+    })
   }).catch((err) => {
     showToast(err?.message || '支付发起失败')
   })
