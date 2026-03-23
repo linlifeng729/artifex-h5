@@ -62,23 +62,6 @@
       <!-- 极验滑块验证容器 -->
       <div v-if="showGeetestContainer" id="geetest-captcha-container" class="mb-5"></div>
 
-      <!-- 协议同意 -->
-      <div class="mb-5">
-        <div class="flex items-start cursor-pointer" @click="toggleAgreement">
-          <div
-            class="w-4 h-4 border border-gray-400 rounded-sm flex items-center justify-center mr-1 mt-0.5 flex-shrink-0 transition-colors duration-200"
-            :class="{ 'bg-[#3cb371] border-[#3cb371]': isAgreed }"
-          >
-            <span v-if="isAgreed" class="text-white text-[10px] font-bold">✓</span>
-          </div>
-          <span class="text-gray-300 text-xs leading-6 flex-1">
-            已阅读并同意
-            <span class="text-[#3cb371] mx-0.5">《用户服务协议》</span>
-            <span class="text-[#3cb371] mx-0.5">《隐私权政策》</span>
-          </span>
-        </div>
-      </div>
-
       <!-- 登录按钮 -->
       <div class="mb-[120px]">
         <button
@@ -146,10 +129,6 @@ const getCubeClass = (index) => {
 const canSendCode = computed(() => phoneNumber.value.length === 11 && isAgreed.value && countdown.value === 0)
 const canLogin = computed(() => verificationCode.value.length === 6)
 const codeButtonText = computed(() => countdown.value > 0 ? `${countdown.value}s` : '发送')
-
-const toggleAgreement = () => {
-  isAgreed.value = !isAgreed.value
-}
 
 const validatePhone = (phone) => /^1[3-9]\d{9}$/.test(phone)
 
