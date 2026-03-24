@@ -19,3 +19,13 @@ import { http } from '@/utils/request'
 export function createPayOrder(data) {
   return http.post('/pay/createOrder', data)
 }
+
+/**
+ * 通过微信授权 code 获取 openid
+ * @param {Object} data - 请求参数
+ * @param {string} data.code - 微信授权 code
+ * @returns {Promise}
+ */
+export function getOpenId(data) {
+  return http.get('/pay/wechatOA/openId', data)
+}

@@ -17,6 +17,11 @@ const routes = [
     component: () => import('@/views/Home/components/NftDetail.vue')
   },
   {
+    path: '/paymentProcess',
+    name: 'PaymentProcess',
+    component: () => import('@/views/paymentProcess.vue')
+  },
+  {
     path: '/:pathMatch(.*)*',
     redirect: '/'
   }
