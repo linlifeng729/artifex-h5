@@ -3,8 +3,10 @@
  * @returns {boolean}
  */
 export function isPC() {
-  const userAgent = navigator.userAgent || navigator.vendor
-  return /Win|Mac|X11/i.test(userAgent) && !/Mobile/i.test(userAgent)
+  const ua = navigator.userAgent
+  const isDesktopUA = /Win|Mac|X11/i.test(ua) && !/Mobile/i.test(ua)
+  const isLargeScreen = window.screen.width >= 768
+  return isDesktopUA && isLargeScreen
 }
 
 /**
