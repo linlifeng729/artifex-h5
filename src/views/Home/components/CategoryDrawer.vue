@@ -7,7 +7,7 @@
   >
     <div class="flex flex-col h-full">
       <DrawerHeader
-        title="商品列表"
+        :title="categoryName"
         :show-left="false"
         @right="handleClose"
       />
@@ -49,12 +49,9 @@
               class="w-full aspect-square bg-white/5 bg-cover bg-center"
               :style="{ backgroundImage: `url(${item.image || '/placeholder.png'})` }"
             />
-            <div class="p-2.5">
-              <div class="text-xs text-white font-medium truncate">{{ item.name }}</div>
-              <div class="mt-1">
-                <span class="text-[11px] text-white/40">库存: {{ item.stock || 0 }}</span>
-              </div>
-              <div class="mt-1.5 text-sm text-green-400 font-semibold">{{ item.price }}</div>
+            <div class="p-2.5 flex items-center justify-between gap-2">
+              <div class="text-xs text-white font-medium truncate">{{ item.nickname }}</div>
+              <div class="text-sm text-green-400 font-semibold shrink-0">{{ item.price }}</div>
             </div>
           </div>
         </div>
@@ -87,6 +84,7 @@ const page = ref(1)
 const sortType = ref('latest')
 const nftList = ref([])
 const categoryId = ref(null)
+const categoryName = ref(null)
 
 const sortOptions = [
   { label: '最新', value: 'latest' },
@@ -105,9 +103,9 @@ const drawerStyle = {
 const mapApiData = (items) => items.map(item => ({
   id: item.id,
   name: item.nft?.name,
+  nickname: item.owner?.nickname,
   image: item.nft?.image || item.image || '',
   price: `¥${((item.price || 0) / 100).toFixed(2)}`,
-  stock: item.availableCount || item.stock || 0,
   remark: item.remark || ''
 }))
 
@@ -145,12 +143,14 @@ const resetState = () => {
   page.value = 1
   finished.value = false
   nftList.value = []
-  categoryId.value = null
+  categoryId.value = ''
+  categoryName.value = ''
 }
 
 const openDrawer = async (category) => {
   resetState()
-  categoryId.value = category.id || null
+  categoryId.value = category.id
+  categoryName.value = category.name
   showDrawer.value = true
   await loadData()
 }
