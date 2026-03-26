@@ -10,7 +10,7 @@ export const JSAPI_PAY = 'JSAPI_PAY'
 export const WX_OPEN_DOMAIN = 'https://open.weixin.qq.com'
 
 // 支付方式枚举
-export const PaymentType = {
+export const PAYMENT_TYPE = {
   WeChat: 'WeChat',
   Alipay: 'Alipay'
 }

@@ -21,7 +21,7 @@ import { showToast } from 'vant'
 import QRCode from 'qrcode'
 import wx from 'weixin-js-sdk'
 import { isPC, isWechatMiniProgram, isWechatBrowser, openWechatMiniProgram } from '@/utils/index'
-import { PaymentType, WX_MP_OPENID_KEY, WX_OA_OPENID_KEY, WX_OPEN_DOMAIN, JSAPI_PAY, PAY_CHANNEL } from '@/utils/constants'
+import { PAYMENT_TYPE, WX_MP_OPENID_KEY, WX_OA_OPENID_KEY, WX_OPEN_DOMAIN, JSAPI_PAY, PAY_CHANNEL } from '@/utils/constants'
 import { createPayOrder } from '@/api/payment'
 import { useRouter } from 'vue-router'
 
@@ -56,19 +56,37 @@ defineExpose({ startPaying, wechatMpPayment, wechatOaPayment, wechatQrCodePaymen
  */
 function startPaying(paymentInfo) {
   const callbackUrl = `${location.origin}${location.pathname}`
-  if (paymentInfo.paymentType === PaymentType.Alipay) {
-    alipayPayment({ ...paymentInfo, callbackUrl })
-  } else if (paymentInfo.paymentType === PaymentType.WeChat) {
-    if (isPC()) {
-      wechatQrCodePayment({ ...paymentInfo })
-    } else if (isWechatMiniProgram()) {
-      wechatMpPayment({ ...paymentInfo, callbackUrl })
-    } else if (isWechatBrowser()) {
-      wechatOaPayment({ ...paymentInfo, callbackUrl: `${location.pathname}` })
-    } else {
-      openWechatMiniProgram('pages/index/index')
+  const mappingObject = {
+    [PAYMENT_TYPE.Alipay]: () => {
+      // 支付宝支付
+      if (isPC()) {
+        // 二维码支付
+        alipayPayment({ ...paymentInfo, callbackUrl, orderInterface: OrderInterface.AlipayWeb })
+      } else {
+        // H5支付
+        alipayPayment({ ...paymentInfo, callbackUrl, orderInterface: OrderInterface.AlipayWap })
+      }
+    },
+    [PAYMENT_TYPE.WeChat]: () => {
+      // 微信支付
+      if (isPC()) {
+        // 二维码支付
+        wechatQrCodePayment({ ...paymentInfo })
+      } else if (isWechatMiniProgram()) {
+        // 微信小程序支付
+        wechatMpPayment({ ...paymentInfo, callbackUrl })
+      } else if (isWechatBrowser()) {
+        // 微信公众号支付
+        wechatOaPayment({ ...paymentInfo, callbackUrl: `${location.pathname}` })
+      } else {
+        // H5支付(暂未实现)
+        // 拉起微信小程序
+        openWechatMiniProgram('pages/index/index')
+      }
     }
   }
+
+  mappingObject[paymentInfo.paymentType]?.()
 }
 
 /**
