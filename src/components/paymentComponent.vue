@@ -104,7 +104,7 @@ function wechatMpPayment(paymentInfo) {
   }
   createPayOrder(createOrderParams).then((res) => {
     wx.miniProgram.navigateTo({
-      url: `/pages/paymentProcess/index?paymentInfo=${encodeURIComponent(JSON.stringify(res))}`,
+      url: `/pages/paymentProcess/index?paymentInfo=${encodeURIComponent(JSON.stringify(res.data))}`,
       success() {
         showToast('正在发起支付，请稍等')
       },
