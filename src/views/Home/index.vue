@@ -26,13 +26,17 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { debounce } from 'lodash-es'
 import TopHeader from '@/components/TopHeader.vue'
 import BottomNav from '@/components/BottomNav.vue'
 import MarketOverview from '@/views/Home/components/MarketOverview.vue'
 import MyAssets from '@/views/Home/components/MyAssets.vue'
+import { useRoute } from 'vue-router'
+import { isIOS } from '@/utils'
+import { WX_MP_OPENID_KEY, WX_OA_CONFIG_URL_KEY } from '@/utils/constants'
 
+const route = useRoute()
 const currentTabValue = ref('bourse')
 
 const headerTabs = ref([
@@ -66,6 +70,16 @@ const refreshCurrentTab = () => {
     myAssetsRef.value.refresh()
   }
 }
+
+function initPage() {
+  // openid（微信小程序）
+  if (route.query.mpOpenid) sessionStorage.setItem(WX_MP_OPENID_KEY, String(route.query.mpOpenid))
+
+  // IOS 使用初次进入页面的 URL 进行签名（微信公众号）
+  if (isIOS()) sessionStorage.setItem(WX_OA_CONFIG_URL_KEY, location.href.split('#')[0])
+}
+
+onMounted(initPage)
 
 defineExpose({
   refreshCurrentTab
