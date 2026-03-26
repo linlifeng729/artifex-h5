@@ -62,20 +62,20 @@
         <div class="flex items-center gap-2">
           <div
             class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs cursor-pointer transition-all border"
-            :class="paymentType === PaymentType.Alipay
+            :class="paymentType === PAYMENT_TYPE.Alipay
               ? 'border-[#3cb371] bg-[#3cb371]/20 text-[#3cb371]'
               : 'border-white/20 text-white/50'"
             v-if="!isWechat()"
-            @click="paymentType = PaymentType.Alipay"
+            @click="paymentType = PAYMENT_TYPE.Alipay"
           >
             支付宝
           </div>
           <div
             class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs cursor-pointer transition-all border"
-            :class="paymentType === PaymentType.WeChat
+            :class="paymentType === PAYMENT_TYPE.WeChat
               ? 'border-[#3cb371] bg-[#3cb371]/20 text-[#3cb371]'
               : 'border-white/20 text-white/50'"
-            @click="paymentType = PaymentType.WeChat"
+            @click="paymentType = PAYMENT_TYPE.WeChat"
           >
             微信
           </div>
@@ -154,8 +154,8 @@ import EmptyState from '@/components/EmptyState.vue'
 import PaymentComponent from '@/components/paymentComponent.vue'
 import DrawerHeader from '@/components/DrawerHeader.vue'
 import { getNftInstanceDetail } from '@/api/nft'
-import { PaymentType } from '@/utils/constants'
-import { isWechat, isWechatBrowser } from '@/utils/index'
+import { PAYMENT_TYPE } from '@/utils/constants'
+import { isWechat } from '@/utils/index'
 
 const router = useRouter()
 const route = useRoute()
@@ -164,7 +164,7 @@ const loading = ref(false)
 const error = ref(null)
 const detail = ref(null)
 const purchasing = ref(false)
-const paymentType = ref(PaymentType.WeChat)
+const paymentType = ref(PAYMENT_TYPE.WeChat)
 const paymentComponentRef = ref(null)
 
 const loadDetail = async () => {
@@ -234,9 +234,9 @@ onMounted(() => {
 const initPage = () => {
   // 如果在微信环境，默认选择微信支付
   if (isWechat()) {
-    paymentType.value = PaymentType.WeChat
+    paymentType.value = PAYMENT_TYPE.WeChat
   } else {
-    paymentType.value = PaymentType.Alipay
+    paymentType.value = PAYMENT_TYPE.Alipay
   }
   loadDetail()
 }
