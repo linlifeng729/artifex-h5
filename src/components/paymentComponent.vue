@@ -61,10 +61,10 @@ function startPaying(paymentInfo) {
       // 支付宝支付
       if (isPC()) {
         // 二维码支付
-        alipayPayment({ ...paymentInfo, callbackUrl, orderInterface: OrderInterface.AlipayWeb })
+        alipayPayment({ ...paymentInfo, callbackUrl, payChannel: PAY_CHANNEL.ALIPAY })
       } else {
         // H5支付
-        alipayPayment({ ...paymentInfo, callbackUrl, orderInterface: OrderInterface.AlipayWap })
+        alipayPayment({ ...paymentInfo, callbackUrl, payChannel: PAY_CHANNEL.ALIPAY_H5 })
       }
     },
     [PAYMENT_TYPE.WeChat]: () => {
@@ -193,7 +193,7 @@ function wechatQrCodePayment(paymentInfo) {
 function alipayPayment(paymentInfo) {
   const createOrderParams = {
     appId: ALI_WEB_APP_ID,
-    payChannel: isPC() ? PAY_CHANNEL.ALIPAY : PAY_CHANNEL.ALIPAY_H5,
+    payChannel: paymentInfo.payChannel,
     goodsId: paymentInfo.goodsId,
     callbackUrl: paymentInfo.callbackUrl,
     description: paymentInfo.description,
