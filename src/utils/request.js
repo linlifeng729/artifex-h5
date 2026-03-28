@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { showToast } from 'vant'
 
 // API请求前缀 - 从环境变量读取
 const API_PREFIX = import.meta.env.VITE_API_PREFIX
@@ -25,16 +26,61 @@ service.interceptors.request.use(
 service.interceptors.response.use(
   (response) => {
     const { data } = response
-    if (data.code === 0 || data.success) {
+    if (data.success) {
       return data.data || data
     }
     return Promise.reject(data)
   },
   (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token')
-      window.location.href = '/login'
+    let errorMsg = '网络异常，请稍后重试'
+
+    if (error.response) {
+      const status = error.response.status
+      switch (status) {
+        case 400:
+          errorMsg = '请求参数错误'
+          break
+        case 401:
+          localStorage.removeItem('token')
+          window.location.href = '/login'
+          return Promise.reject(error)
+        case 403:
+          errorMsg = '暂无权限操作'
+          break
+        case 404:
+          errorMsg = '请求地址不存在'
+          break
+        case 408:
+          errorMsg = '请求超时'
+          break
+        case 429:
+          errorMsg = '请求过于频繁，请稍后重试'
+          break
+        case 500:
+          errorMsg = '服务器内部错误'
+          break
+        case 502:
+          errorMsg = '网关错误'
+          break
+        case 503:
+          errorMsg = '服务不可用'
+          break
+        case 504:
+          errorMsg = '网关超时'
+          break
+        default:
+          errorMsg = `请求失败 (${status})`
+      }
+    } else if (error.request) {
+      // 请求已发出但没有收到响应
+      if (error.code === 'ECONNABORTED') {
+        errorMsg = '请求超时，请稍后重试'
+      } else {
+        errorMsg = '网络连接失败，请检查网络'
+      }
     }
+
+    showToast(error.response.data.message || errorMsg)
     return Promise.reject(error)
   }
 )

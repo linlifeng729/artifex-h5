@@ -212,10 +212,7 @@ const sendVerifyCodeWithCaptcha = async () => {
     geetestValidateData.value = null
     // 隐藏极验容器
     showGeetestContainer.value = false
-  } catch (error) {
-    console.error('发送验证码失败:', error)
-    showToast(error.message || '验证码发送失败，请重试')
-  }
+  } catch (error) { }
 }
 
 const handleLogin = async () => {
@@ -235,8 +232,6 @@ const handleLogin = async () => {
     }
     router.replace('/')
   } catch (error) {
-    console.error('登录失败:', error)
-    showToast(error.message || '登录失败，请重试')
     verificationCode.value = ''
   }
 }
