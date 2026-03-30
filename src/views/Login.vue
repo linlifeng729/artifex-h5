@@ -51,16 +51,13 @@
               'bg-white/20 !text-white shadow-none': countdown > 0,
               'opacity-50 cursor-not-allowed': countdown === 0 && !canSendCode
             }"
-            :disabled="countdown === 0 && !canSendCode"
+            :disabled="!canSendCode || isSendingCode"
             @click="handleSendCodeClick"
           >
             {{ codeButtonText }}
           </button>
         </div>
       </div>
-
-      <!-- 极验滑块验证容器 -->
-      <div v-if="showGeetestContainer" id="geetest-captcha-container" class="mb-5"></div>
 
       <!-- 登录按钮 -->
       <div class="mb-[120px]">
@@ -90,11 +87,12 @@ const isAgreed = ref(true)
 const countdown = ref(0)
 const timer = ref(null)
 const verificationCode = ref('')
+const isSendingCode = ref(false)
 
 // 极验相关
-const geetestCaptcha = ref(null)
-const geetestValidateData = ref(null)
-const showGeetestContainer = ref(false)
+let geetestCaptcha = null
+let geetestReady = false  // 标记极验实例是否已 ready
+let geetestInitPromise = null
 
 const cubes = ref([
   { style: { left: '8%', top: '12%', transform: 'rotateX(45deg) rotateY(25deg)', background: 'linear-gradient(135deg, #4a9eff, #6b73ff)' }, image: '' },
@@ -126,7 +124,7 @@ const getCubeClass = (index) => {
   return classes
 }
 
-const canSendCode = computed(() => phoneNumber.value.length === 11 && isAgreed.value && countdown.value === 0)
+const canSendCode = computed(() => phoneNumber.value.length === 11 && isAgreed.value && countdown.value === 0 && !isSendingCode.value)
 const canLogin = computed(() => verificationCode.value.length === 6)
 const codeButtonText = computed(() => countdown.value > 0 ? `${countdown.value}s` : '发送')
 
@@ -143,76 +141,127 @@ const startCountdown = () => {
   }, 1000)
 }
 
-// 初始化极验滑块验证
+// 初始化极验实例（使用 bind 模式）
 const initGeetest = () => {
-  // 显示极验容器
-  showGeetestContainer.value = true
+  if (geetestInitPromise) return geetestInitPromise
+  if (window.initGeetest4 && !geetestCaptcha) {
+    geetestInitPromise = new Promise((resolve, reject) => {
+      window.initGeetest4(
+        {
+          captchaId: import.meta.env.VITE_GEETEST_LOGIN_ID,
+          product: 'bind',
+          language: 'zh-cn'
+        },
+        (captcha) => {
+          geetestCaptcha = captcha
+          geetestReady = false
 
-  window.initGeetest4(
-    {
-      captchaId: import.meta.env.VITE_GEETEST_LOGIN_ID
-    },
-    (captcha) => {
-      geetestCaptcha.value = captcha
+          // 监听验证码资源加载完成
+          geetestCaptcha.onReady(() => {
+            geetestReady = true
+            resolve(true)
+          })
 
-      captcha.appendTo('#geetest-captcha-container')
+          // 验证成功回调（用户完成滑块验证后触发）
+          geetestCaptcha.onSuccess(() => {
+            const validateData = geetestCaptcha.getValidate()
+            if (validateData) {
+              sendCodeWithCaptcha(validateData)
+            } else {
+              showToast('验证失败，请重试')
+              resetGeetest()
+            }
+          })
 
-      captcha.onSuccess(() => {
-        geetestValidateData.value = captcha.getValidate()
-        captcha.reset()
-        // 验证成功后发送验证码
-        sendVerifyCodeWithCaptcha()
-      })
-
-      captcha.onError(() => {
-        showToast('验证失败，请重试')
-      })
-    }
-  )
+          // 验证出错回调
+          geetestCaptcha.onError((error) => {
+            console.error('极验验证出错', error)
+            showToast('验证服务异常，请重试')
+            resetGeetest()
+          })
+        }
+      )
+    }).catch((err) => {
+      console.error('极验初始化失败', err)
+      geetestCaptcha = null
+      geetestReady = false
+      reject(err)
+    })
+    return geetestInitPromise
+  } else if (geetestCaptcha) {
+    return Promise.resolve(true)
+  } else {
+    return Promise.reject(new Error('极验脚本未加载'))
+  }
 }
 
-// 点击发送验证码按钮 - 先触发滑块验证
-const handleSendCodeClick = () => {
+// 重置极验实例状态
+const resetGeetest = () => {
+  if (geetestCaptcha && geetestCaptcha.reset) {
+    geetestCaptcha.reset()
+  }
+  // 重置 ready 标志，等待下次重新初始化
+  geetestReady = false
+}
+
+// 使用验证数据发送短信验证码
+const sendCodeWithCaptcha = async (validateData) => {
+  if (!validateData) {
+    showToast('验证数据无效，请重试')
+    resetGeetest()
+    return
+  }
+  if (!validatePhone(phoneNumber.value)) {
+    showToast('手机号格式不正确')
+    resetGeetest()
+    return
+  }
+
+  isSendingCode.value = true
+  try {
+    await sendVerificationCode({
+      phone: phoneNumber.value,
+      ...validateData
+    })
+    startCountdown()
+    // 发送成功后重置极验，以便下次重新验证
+    resetGeetest()
+  } catch (error) {
+    // 发送失败，重置极验，让用户可以重新点击发送按钮再次验证
+    resetGeetest()
+  } finally {
+    isSendingCode.value = false
+  }
+}
+
+// 点击发送按钮：校验手机号后直接拉起极验弹窗
+const handleSendCodeClick = async () => {
   if (!canSendCode.value) return
   if (!validatePhone(phoneNumber.value)) {
     showToast('请输入正确的手机号')
     return
   }
 
-  // 如果已经有验证数据，直接发送
-  if (geetestValidateData.value) {
-    sendVerifyCodeWithCaptcha()
-    return
-  }
-
-  // 显示极验容器并初始化
-  showGeetestContainer.value = true
-  initGeetest()
-}
-
-// 带滑块验证的发送验证码
-const sendVerifyCodeWithCaptcha = async () => {
-  if (!geetestValidateData.value) {
-    showToast('请先完成滑块验证')
-    return
-  }
-
-  if (!validatePhone(phoneNumber.value)) {
-    showToast('请输入正确的手机号')
-    return
-  }
-
   try {
-    await sendVerificationCode({
-      phone: phoneNumber.value,
-      ...geetestValidateData.value
-    })
-    startCountdown()
-    // 清空验证数据，下次需要重新验证
-    geetestValidateData.value = null
-    // 隐藏极验容器
-    showGeetestContainer.value = false
-  } catch (error) { }
+    // 确保极验已初始化
+    await initGeetest()
+    
+    // 检查实例是否就绪（bind 模式下需要等待 onReady 完成）
+    if (!geetestReady) {
+      // 如果尚未 ready，等待一小段时间（实际 onReady 已在 init 中 resolve 时设置）
+      await new Promise(resolve => setTimeout(resolve, 100))
+      if (!geetestReady) {
+        showToast('验证组件加载中，请稍后重试')
+        return
+      }
+    }
+    
+    // 调用 showCaptcha() 拉起滑块验证弹窗（官方 bind 模式标准用法）
+    geetestCaptcha.showCaptcha()
+  } catch (error) {
+    console.error('极验初始化失败', error)
+    showToast('验证服务加载失败，请刷新页面重试')
+  }
 }
 
 const handleLogin = async () => {
@@ -237,8 +286,15 @@ const handleLogin = async () => {
 }
 
 onMounted(async () => {
+  // 加载极验脚本
   if (!window.initGeetest4) {
     await import('https://static.geetest.com/v4/gt4.js')
+  }
+  // 预初始化极验实例（不调用 showCaptcha，仅加载资源）
+  try {
+    await initGeetest()
+  } catch (err) {
+    console.warn('极验预初始化失败，将在点击发送时重试', err)
   }
 })
 
@@ -248,8 +304,9 @@ onUnmounted(() => {
     timer.value = null
   }
   // 销毁极验实例
-  if (geetestCaptcha.value?.destroy) {
-    geetestCaptcha.value.destroy()
+  if (geetestCaptcha && geetestCaptcha.destroy) {
+    geetestCaptcha.destroy()
+    geetestCaptcha = null
   }
 })
 </script>
