@@ -199,9 +199,11 @@ const initGeetest = () => {
 const resetGeetest = () => {
   if (geetestCaptcha && geetestCaptcha.reset) {
     geetestCaptcha.reset()
+    // 重置后实例仍处于 ready 状态，可直接再次 showCaptcha
+    geetestReady = true
+  } else {
+    geetestReady = false
   }
-  // 重置 ready 标志，等待下次重新初始化
-  geetestReady = false
 }
 
 // 使用验证数据发送短信验证码
