@@ -1,52 +1,43 @@
 <template>
-  <div class="my-assets">
-    <div class="selector-tabs">
+  <div class="w-full">
+    <div class="flex items-center justify-center gap-6 px-3 py-3 mx-4 my-3 rounded-2xl backdrop-blur-sm border border-white/30 bg-white/10">
       <div 
         v-for="(tab, index) in selectorTabs" 
         :key="index"
-        class="selector-tab"
-        :class="{ 'selector-tab-active': index === activeTabIndex }"
+        class="text-sm text-white/60 whitespace-nowrap cursor-pointer transition-colors duration-300"
+        :class="{ 'text-white font-medium': index === activeTabIndex }"
         @click="handleTabClick(index)"
       >
         {{ tab }}
       </div>
     </div>
 
-    <div class="crypto-list">
+    <div class="bg-white/10 px-4 mx-4 my-3 rounded-2xl border border-white/30">
       <LoadingState :visible="loading" />
 
       <div v-if="!loading && nftList.length > 0" class="crypto-results">
         <div 
           v-for="(item, index) in nftList" 
           :key="item.id" 
-          class="crypto-item"
+          class="h-[75px] flex justify-between items-center py-3 border-b border-white/30"
         >
-          <div class="crypto-left">
+          <div class="h-full flex items-center gap-2 min-w-0 flex-1">
             <div 
-              class="crypto-icon"
+              class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 bg-no-repeat bg-cover bg-center border border-white/30"
               :style="{ backgroundImage: `url(${item.nft?.image})` }"
             >
             </div>
-            <div class="crypto-info">
-              <div class="crypto-name">
-                <span>{{ item.nft?.name }}</span>
+            <div class="flex flex-col gap-0.5 min-w-0">
+              <div class="text-sm text-white font-medium truncate">
+                {{ item.nft?.name }}
               </div>
-              <div class="crypto-desc">
-                <span>编号: {{ item.nftNumber || '无' }}</span>
-              </div>
-              <div class="crypto-desc">
-                <span>{{ item.remark }}</span>
+              <div class="text-xs text-white/60 truncate">
+                {{ item.remark }}
               </div>
             </div>
           </div>
-          <div class="crypto-right">
-            <div class="crypto-price">{{ formatPrice(item?.price) }}</div>
-            <div 
-              class="crypto-change"
-              :style="getStatusStyle(item, index)"
-            >
-              下架
-            </div>
+          <div class="h-full ml-3 flex-shrink-0 flex flex-col items-end justify-around">
+            <div class="text-sm text-white font-medium">{{ formatPrice(item?.price) }}</div>
           </div>
         </div>
       </div>
@@ -124,36 +115,10 @@ const handleTabClick = (index) => {
 }
 
 const formatPrice = (price) => {
-  if (!price) return '¥0'
-  const numPrice = parseFloat(price)
-  if (isNaN(numPrice)) return '¥0'
-  return `¥${numPrice.toLocaleString()}`
-}
-
-const getStatusStyle = (item, index) => {
-  const styles = [
-    { background: 'linear-gradient(135deg, #FF6B6B, #EE5A24)', color: 'white' },
-    { background: 'linear-gradient(135deg, #4ECDC4, #26DE81)', color: 'white' },
-    { background: 'linear-gradient(135deg, #FFD700, #FFA500)', color: 'white' },
-    { background: 'linear-gradient(135deg, #9B59B6, #6C5CE7)', color: 'white' },
-    { background: 'linear-gradient(135deg, #26DE81, #20BF6B)', color: 'white' },
-    { background: 'linear-gradient(135deg, #95E1D3, #26DE81)', color: 'white' },
-    { background: 'linear-gradient(135deg, #FF9F43, #E17055)', color: 'white' },
-    { background: 'linear-gradient(135deg, #6C5CE7, #5A67D8)', color: 'white' },
-    { background: 'linear-gradient(135deg, #FD79A8, #E84393)', color: 'white' },
-    { background: 'linear-gradient(135deg, #FDCB6E, #F39C12)', color: 'white' },
-    { background: 'linear-gradient(135deg, #FF7675, #D63031)', color: 'white' },
-    { background: 'linear-gradient(135deg, #74B9FF, #0984E3)', color: 'white' },
-    { background: 'linear-gradient(135deg, #A29BFE, #6C5CE7)', color: 'white' },
-    { background: 'linear-gradient(135deg, #FD79A8, #FF7675)', color: 'white' },
-    { background: 'linear-gradient(135deg, #55A3FF, #2D3436)', color: 'white' },
-    { background: 'linear-gradient(135deg, #00B894, #00A085)', color: 'white' },
-    { background: 'linear-gradient(135deg, #E84393, #D63031)', color: 'white' },
-    { background: 'linear-gradient(135deg, #00CEC9, #00B894)', color: 'white' },
-    { background: 'linear-gradient(135deg, #FDCB6E, #E17055)', color: 'white' },
-    { background: 'linear-gradient(135deg, #6C5CE7, #A29BFE)', color: 'white' }
-  ]
-  return styles[index % styles.length]
+  if (!price) return '¥0.00'
+  const numPrice = parseFloat(price) / 100
+  if (isNaN(numPrice)) return '¥0.00'
+  return `¥${numPrice.toFixed(2)}`
 }
 
 onMounted(() => {
@@ -165,114 +130,3 @@ defineExpose({
   refresh: () => loadNftList(props.searchKeyword)
 })
 </script>
-
-<style scoped>
-.my-assets {
-  width: 100%;
-}
-
-.selector-tabs {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 24px;
-  padding: 12px;
-  margin: 12px 16px;
-  border-radius: 16px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.selector-tab {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.6);
-  white-space: nowrap;
-  cursor: pointer;
-  transition: color 0.3s;
-}
-
-.selector-tab-active {
-  color: #ffffff;
-  font-weight: 500;
-}
-
-.crypto-list {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 0 16px;
-  margin: 12px 16px;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-.crypto-item {
-  height: 75px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-.crypto-item:last-child {
-  border-bottom: none;
-}
-
-.crypto-left {
-  height: 100%;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.crypto-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  overflow: hidden;
-  flex-shrink: 0;
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: center;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-.crypto-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.crypto-name {
-  font-size: 14px;
-  color: #ffffff;
-  font-weight: 500;
-}
-
-.crypto-desc {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.crypto-right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  justify-content: space-around;
-  height: 100%;
-  margin-left: 12px;
-}
-
-.crypto-price {
-  font-size: 14px;
-  color: #ffffff;
-  font-weight: 500;
-}
-
-.crypto-change {
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 500;
-}
-</style>
