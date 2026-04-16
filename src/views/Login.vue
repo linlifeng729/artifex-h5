@@ -287,13 +287,25 @@ const handleLogin = async () => {
   }
 }
 
+// 加载极验脚本（使用标准 script 标签方式）
+const loadGeetestScript = () => {
+  return new Promise((resolve, reject) => {
+    if (window.initGeetest4) {
+      resolve(true)
+      return
+    }
+    const script = document.createElement('script')
+    script.src = 'https://static.geetest.com/v4/gt4.js'
+    script.onload = () => resolve(true)
+    script.onerror = () => reject(new Error('极验脚本加载失败'))
+    document.head.appendChild(script)
+  })
+}
+
 onMounted(async () => {
-  // 加载极验脚本
-  if (!window.initGeetest4) {
-    await import('https://static.geetest.com/v4/gt4.js')
-  }
   // 预初始化极验实例（不调用 showCaptcha，仅加载资源）
   try {
+    await loadGeetestScript()
     await initGeetest()
   } catch (err) {
     console.warn('极验预初始化失败，将在点击发送时重试', err)
