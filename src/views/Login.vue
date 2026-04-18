@@ -280,8 +280,17 @@ const handleLogin = async () => {
     if (result.token) {
       localStorage.setItem('token', result.token)
       localStorage.setItem('userInfo', JSON.stringify(result.user))
+
+      const params = new URLSearchParams(window.location.search)
+      const redirect = params.get('redirect')
+      if (redirect && redirect.startsWith('/')) {
+        router.replace(redirect)
+        return
+      }
+      const fromRedirect = sessionStorage.getItem('loginRedirectFrom')
+      sessionStorage.removeItem('loginRedirectFrom')
+      router.replace(fromRedirect || '/')
     }
-    router.replace('/')
   } catch (error) {
     verificationCode.value = ''
   }

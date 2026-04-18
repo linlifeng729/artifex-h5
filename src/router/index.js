@@ -1,4 +1,5 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router';
+import { isLoggedIn } from '@/utils/auth';
 
 const routes = [
   {
@@ -9,7 +10,15 @@ const routes = [
   {
     path: '/login',
     name: 'Login',
-    component: () => import('@/views/Login.vue')
+    component: () => import('@/views/Login.vue'),
+    meta: {
+      hideNavBar: true,
+    },
+  },
+  {
+    path: '/chat',
+    name: 'Chat',
+    component: () => import('@/views/Chat/ChatRoom.vue'),
   },
   {
     path: '/nft-detail/:id',
@@ -30,6 +39,14 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes
-})
+});
 
-export default router
+// 全局前置守卫：记录来源页面（用于登录后回跳）
+router.beforeEach((to, from) => {
+  if (from.name && from.name !== 'Login') {
+    sessionStorage.setItem('loginRedirectFrom', from.fullPath);
+  }
+  return true;
+});
+
+export default router;

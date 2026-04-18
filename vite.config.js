@@ -17,6 +17,11 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       proxy: {
+        '/socket.io': {
+          target: 'http://127.0.0.1:12600',
+          ws: true,
+          changeOrigin: true,
+        },
         [env.VITE_API_PREFIX]: {
           target: 'http://127.0.0.1:12600/',
           // target: 'https://linlifeng.top/',

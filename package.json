@@ -13,6 +13,7 @@
     "axios": "^1.13.6",
     "lodash-es": "^4.17.23",
     "qrcode": "^1.5.4",
+    "socket.io-client": "^4.8.3",
     "vant": "^4.9.22",
     "vue": "^3.5.30",
     "vue-router": "^4.6.4",
