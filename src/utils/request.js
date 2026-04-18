@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { showToast } from 'vant'
+import { useAuthStore } from '@/stores/auth'
 
 // API请求前缀 - 从环境变量读取
 const API_PREFIX = import.meta.env.VITE_API_PREFIX
@@ -13,9 +14,9 @@ const service = axios.create({
 // 请求拦截器
 service.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token')
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+    const authStore = useAuthStore()
+    if (authStore.token) {
+      config.headers.Authorization = `Bearer ${authStore.token}`
     }
     return config
   },
@@ -41,7 +42,7 @@ service.interceptors.response.use(
           errorMsg = '请求参数错误'
           break
         case 401:
-          localStorage.removeItem('token')
+          useAuthStore().logout()
           window.location.href = '/login'
           return Promise.reject(error)
         case 403:

@@ -1,24 +1,46 @@
 <template>
-  <div class="chat-room">
-    <van-nav-bar title="聊天室" fixed />
-    <div class="pt-[46px] pb-[140px]">
-      <van-list
-        ref="messageListRef"
-        :finished="historyFinished"
-        :loading="historyLoading"
-        finished-text="没有更多了"
-        @load="loadMoreHistory"
-      >
-        <MessageList
-          :messages="messages"
-          :currentUserId="currentUserId"
-        />
-      </van-list>
-    </div>
+  <div
+    class="relative min-h-screen text-white pb-[140px] pt-4"
+    style="background: linear-gradient(160deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);"
+  >
+    <!-- 自定义毛玻璃导航栏 -->
+    <header class="fixed top-0 left-0 right-0 z-[999] flex items-center justify-between p-4 border-b border-white/10 bg-white/10 backdrop-blur-md">
+      <button class="w-7 h-7 flex items-center justify-center bg-white/10 rounded-full border-none cursor-pointer active:bg-white/20" @click="$router.back()">
+        <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+          <path d="M12.5 15L7.5 10L12.5 5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+
+      <h3 class="text-base font-medium bg-gradient-to-r from-blue-400 via-purple-500 to-pink-400 bg-clip-text text-transparent">
+        交流群
+      </h3>
+
+      <div class="flex items-center gap-3">
+        <div style="font-size: 20px; filter: drop-shadow(0 1px 4px rgba(245, 222, 179, 0.3));">🎁</div>
+      </div>
+    </header>
+
+    <!-- 消息列表 -->
+    <van-list
+      ref="messageListRef"
+      :finished="historyFinished"
+      :loading="historyLoading"
+      finished-text="没有更多了"
+      @load="loadMoreHistory"
+      class="pt-16"
+    >
+      <MessageList
+        :messages="messages"
+        :currentUserId="currentUserId"
+      />
+    </van-list>
+
+    <!-- 未登录提示条 -->
     <LoginPrompt
       v-if="!isLogin"
       @click-login="goToLogin"
     />
+    <!-- 消息输入框 -->
     <MessageInput
       v-else
       @send="handleSend"
@@ -28,18 +50,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue';
+import { ref, onMounted, watch, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import { showToast } from 'vant';
-import {
-  connectChat,
-  disconnectChat,
-  sendChatMessage,
-  requestHistory,
-  reAuthenticate,
-  getStoredToken,
-  isConnected,
-} from '@/utils/chat-ws';
+import { useChatSocket } from '@/composables/useChatSocket';
 import MessageList from './components/MessageList.vue';
 import MessageInput from './components/MessageInput.vue';
 import LoginPrompt from './components/LoginPrompt.vue';
@@ -48,21 +62,27 @@ import { WSErrorCode } from '@/utils/chat-types';
 const router = useRouter();
 
 const messages = ref([]);
-const currentUserId = ref(null);
-const isLogin = ref(false);
 const sending = ref(false);
 const historyLoading = ref(false);
 const historyFinished = ref(false);
 const nextBeforeId = ref(null);
 const messageListRef = ref(null);
 
+const {
+  connect,
+  sendMessage,
+  requestHistory,
+  reAuthenticate,
+  isConnected,
+  currentUserId,
+  isLogin,
+} = useChatSocket();
+
 // ========== 生命周期 ==========
 
 onMounted(() => {
-  connectChat({
+  connect({
     onJoinAck: (payload) => {
-      currentUserId.value = payload.userId;
-      isLogin.value = payload.isLogin;
       requestHistory(null, 20);
     },
     onMessage: (msg) => addMessage(msg),
@@ -86,15 +106,11 @@ onMounted(() => {
   });
 });
 
-onUnmounted(() => {
-  disconnectChat();
-});
-
 // ========== 登录状态监听 ==========
 
 watch(isLogin, (newVal, oldVal) => {
   if (oldVal === false && newVal === true) {
-    reAuthenticate(getStoredToken());
+    reAuthenticate();
   }
 });
 
@@ -109,7 +125,7 @@ async function handleSend(content) {
   if (sending.value) return;
   sending.value = true;
   try {
-    const messageId = sendChatMessage(content);
+    const messageId = sendMessage(content);
     if (!messageId) {
       showToast('发送失败，请检查网络');
     }
@@ -122,7 +138,6 @@ function handleWsError(code, message) {
   switch (code) {
     case WSErrorCode.NOT_LOGIN:
       showToast('请先登录后再发送消息');
-      isLogin.value = false;
       break;
     case WSErrorCode.TOKEN_EXPIRED:
       showToast('登录已过期，请重新登录');

@@ -1,12 +1,19 @@
 <template>
-  <div class="user-message" :class="isSelf ? 'user-message--self' : 'user-message--other'">
-    <div class="user-message__avatar">
-      <img v-if="avatar" :src="avatar" alt="avatar" />
-      <span v-else>{{ nickname?.slice(0, 1) }}</span>
+  <div class="flex gap-[10px] mb-3 px-3" :class="isSelf ? 'flex-row-reverse' : ''">
+    <div class="w-[38px] h-[38px] rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden" style="background: linear-gradient(135deg, #667eea, #764ba2); box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);">
+      <img v-if="avatar" :src="avatar" alt="avatar" class="w-full h-full object-cover" />
+      <span v-else class="text-sm font-semibold text-white">{{ nickname?.slice(0, 1) }}</span>
     </div>
-    <div class="user-message__body">
-      <div class="user-message__nickname">{{ nickname }}</div>
-      <div class="user-message__bubble">{{ content }}</div>
+    <div class="max-w-[72%] flex flex-col gap-1" :class="isSelf ? 'items-end' : ''">
+      <div class="text-[11px] text-white/45 px-1">{{ nickname }}</div>
+      <div
+        class="inline-block px-3 py-2.5 rounded-2xl text-[15px] leading-[1.45] break-all whitespace-pre-wrap"
+        :style="isSelf
+          ? 'background: linear-gradient(135deg, #3cb371, #2e8b57); color: white; box-shadow: 0 2px 8px rgba(60, 179, 113, 0.25);'
+          : 'background: rgba(255, 255, 255, 0.1); color: white; border: 1px solid rgba(255, 255, 255, 0.12);'"
+      >
+        {{ content }}
+      </div>
     </div>
   </div>
 </template>
@@ -32,45 +39,3 @@ const nickname = computed(() => props.message.nickname);
 const content = computed(() => props.message.content);
 const avatar = computed(() => null);
 </script>
-
-<style scoped>
-.user-message {
-  @apply flex gap-2 mb-3 px-3;
-}
-
-.user-message--self {
-  @apply flex-row-reverse;
-}
-
-.user-message__avatar {
-  @apply w-9 h-9 rounded-full bg-gradient-to-br from-[#3cb371] to-[#2e8b57] flex items-center justify-center text-sm font-semibold text-white flex-shrink-0 overflow-hidden;
-}
-
-.user-message__avatar img {
-  @apply w-full h-full object-cover;
-}
-
-.user-message__body {
-  @apply max-w-[70%] flex flex-col gap-0.5;
-}
-
-.user-message--self .user-message__body {
-  @apply items-end;
-}
-
-.user-message__nickname {
-  @apply text-[11px] text-[rgba(255,255,255,0.5)] px-1;
-}
-
-.user-message__bubble {
-  @apply inline-block px-3 py-2 rounded-xl text-[15px] leading-normal break-words whitespace-pre-wrap;
-}
-
-.user-message--other .user-message__bubble {
-  @apply bg-[rgba(255,255,255,0.12)] text-white rounded-bl-sm;
-}
-
-.user-message--self .user-message__bubble {
-  @apply bg-[#3cb371] text-white rounded-br-sm;
-}
-</style>

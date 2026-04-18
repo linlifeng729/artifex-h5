@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import { isLoggedIn } from '@/utils/auth';
 
 const routes = [
   {
@@ -19,6 +18,9 @@ const routes = [
     path: '/chat',
     name: 'Chat',
     component: () => import('@/views/Chat/ChatRoom.vue'),
+    meta: {
+      keepAlive: true,
+    },
   },
   {
     path: '/nft-detail/:id',

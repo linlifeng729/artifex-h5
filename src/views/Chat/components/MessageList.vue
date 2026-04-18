@@ -1,5 +1,5 @@
 <template>
-  <div class="message-list" ref="containerRef">
+  <div ref="containerRef">
     <div
       v-for="(msg, index) in messages"
       :key="msg.messageId || msg.seq || index"
@@ -14,8 +14,8 @@
         :currentUserId="currentUserId"
       />
     </div>
-    <div v-if="messages.length === 0" class="message-list__empty">
-      <span>暂无消息，快来发起聊天吧~</span>
+    <div v-if="messages.length === 0" class="flex justify-center items-center py-10 px-4">
+      <span class="text-sm text-white/30">暂无消息，快来发起聊天吧~</span>
     </div>
   </div>
 </template>
@@ -35,13 +35,3 @@ defineProps({
   },
 });
 </script>
-
-<style scoped>
-.message-list {
-  @apply pt-3 min-h-full;
-}
-
-.message-list__empty {
-  @apply flex justify-center items-center py-10 text-sm text-[rgba(255,255,255,0.35)];
-}
-</style>

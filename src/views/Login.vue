@@ -78,9 +78,10 @@
 import { ref, computed, onUnmounted, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast } from 'vant'
-import { sendVerificationCode, login } from '@/api/auth'
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
+const authStore = useAuthStore()
 
 const phoneNumber = ref('')
 const isAgreed = ref(true)
@@ -221,7 +222,7 @@ const sendCodeWithCaptcha = async (validateData) => {
 
   isSendingCode.value = true
   try {
-    await sendVerificationCode({
+    await authStore.sendVerificationCode({
       phone: phoneNumber.value,
       ...validateData
     })
@@ -273,14 +274,8 @@ const handleLogin = async () => {
     return
   }
   try {
-    const result = await login({
-      phone: phoneNumber.value,
-      verificationCode: verificationCode.value
-    })
+    const result = await authStore.login(phoneNumber.value, verificationCode.value)
     if (result.token) {
-      localStorage.setItem('token', result.token)
-      localStorage.setItem('userInfo', JSON.stringify(result.user))
-
       const params = new URLSearchParams(window.location.search)
       const redirect = params.get('redirect')
       if (redirect && redirect.startsWith('/')) {
