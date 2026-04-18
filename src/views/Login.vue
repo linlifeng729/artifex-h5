@@ -279,7 +279,7 @@ const handleLogin = async () => {
     })
     if (result.token) {
       localStorage.setItem('token', result.token)
-      localStorage.setItem('userInfo', JSON.stringify(result.userInfo || {}))
+      localStorage.setItem('userInfo', JSON.stringify(result.user))
     }
     router.replace('/')
   } catch (error) {
