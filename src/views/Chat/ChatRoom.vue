@@ -1,6 +1,6 @@
 <template>
   <div
-    class="relative min-h-screen text-white pb-[140px] pt-4"
+    class="relative min-h-screen text-white flex flex-col"
     style="background: linear-gradient(160deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);"
   >
     <!-- 自定义毛玻璃导航栏 -->
@@ -21,19 +21,28 @@
     </header>
 
     <!-- 消息列表 -->
-    <van-list
-      ref="messageListRef"
-      :finished="historyFinished"
-      :loading="historyLoading"
-      finished-text="没有更多了"
-      @load="loadMoreHistory"
-      class="pt-16"
+    <div
+      ref="scrollContainerRef"
+      class="flex-1 overflow-y-auto pt-16 pb-[140px]"
     >
+      <!-- 顶部哨兵：触发加载历史 -->
+      <div ref="sentinelRef" class="h-0" />
+
+      <div v-if="historyLoading" class="text-center py-2">
+        <van-loading size="20" color="#999" />
+      </div>
+      <div v-if="historyFinished && messages.length > 0" class="text-center py-2">
+        <span class="text-xs text-white/30">没有更多了</span>
+      </div>
+
       <MessageList
         :messages="messages"
         :currentUserId="currentUserId"
       />
-    </van-list>
+
+      <!-- 底部锚点：用于 scrollToBottom -->
+      <div ref="bottomAnchorRef" />
+    </div>
 
     <!-- 未登录提示条 -->
     <LoginPrompt
@@ -50,7 +59,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, nextTick } from 'vue';
+import { ref, onMounted, onUnmounted, onActivated, onDeactivated, watch, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import { showToast } from 'vant';
 import { useChatSocket } from '@/composables/useChatSocket';
@@ -59,6 +68,8 @@ import MessageInput from './components/MessageInput.vue';
 import LoginPrompt from './components/LoginPrompt.vue';
 import { WSErrorCode } from '@/utils/chat-types';
 
+const MAX_MESSAGES = 200;
+
 const router = useRouter();
 
 const messages = ref([]);
@@ -66,10 +77,15 @@ const sending = ref(false);
 const historyLoading = ref(false);
 const historyFinished = ref(false);
 const nextBeforeId = ref(null);
-const messageListRef = ref(null);
+const scrollContainerRef = ref(null);
+const sentinelRef = ref(null);
+const bottomAnchorRef = ref(null);
+
+let observer = null;
 
 const {
   connect,
+  disconnect,
   sendMessage,
   requestHistory,
   reAuthenticate,
@@ -78,21 +94,33 @@ const {
   isLogin,
 } = useChatSocket();
 
-// ========== 生命周期 ==========
+// ========== WebSocket 回调配置 ==========
 
-onMounted(() => {
-  connect({
-    onJoinAck: (payload) => {
+function getSocketCallbacks() {
+  return {
+    onJoinAck: () => {
       requestHistory(null, 20);
     },
     onMessage: (msg) => addMessage(msg),
     onHistory: ({ list, hasMore, nextBeforeId: nextId }) => {
+      const container = scrollContainerRef.value;
+      const prevScrollHeight = container?.scrollHeight ?? 0;
+
       messages.value = [...list.reverse(), ...messages.value];
+      if (messages.value.length > MAX_MESSAGES) {
+        messages.value = messages.value.slice(-MAX_MESSAGES);
+      }
       nextBeforeId.value = nextId;
       if (!hasMore) {
         historyFinished.value = true;
       }
       historyLoading.value = false;
+
+      nextTick(() => {
+        if (container) {
+          container.scrollTop = container.scrollHeight - prevScrollHeight;
+        }
+      });
     },
     onSystem: (sys) => {
       messages.value.push({ ...sys, messageType: 2 });
@@ -103,8 +131,47 @@ onMounted(() => {
       historyLoading.value = false;
     },
     onDisconnected: () => {},
-  });
+  };
+}
+
+// ========== 生命周期 ==========
+
+onMounted(() => {
+  initIntersectionObserver();
+  connect(getSocketCallbacks());
 });
+
+onUnmounted(() => {
+  observer?.disconnect();
+  observer = null;
+  disconnect();
+});
+
+onDeactivated(() => {
+  disconnect();
+});
+
+onActivated(() => {
+  initIntersectionObserver();
+  connect(getSocketCallbacks());
+});
+
+// ========== IntersectionObserver ==========
+
+function initIntersectionObserver() {
+  if (observer) return;
+  observer = new IntersectionObserver(
+    ([entry]) => {
+      if (entry.isIntersecting && isConnected() && !historyLoading.value && !historyFinished.value) {
+        loadMoreHistory();
+      }
+    },
+    { root: scrollContainerRef.value, rootMargin: '100px 0px' }
+  );
+  if (sentinelRef.value) {
+    observer.observe(sentinelRef.value);
+  }
+}
 
 // ========== 登录状态监听 ==========
 
@@ -118,6 +185,9 @@ watch(isLogin, (newVal, oldVal) => {
 
 function addMessage(msg) {
   messages.value.push(msg);
+  if (messages.value.length > MAX_MESSAGES) {
+    messages.value.shift();
+  }
   scrollToBottom();
 }
 
@@ -169,11 +239,12 @@ async function loadMoreHistory() {
   requestHistory(nextBeforeId.value, 20);
 }
 
-function scrollToBottom() {
+function scrollToBottom(smooth = true) {
   nextTick(() => {
-    if (messageListRef.value) {
-      messageListRef.value.scrollToBottom();
-    }
+    bottomAnchorRef.value?.scrollIntoView({
+      behavior: smooth ? 'smooth' : 'instant',
+      block: 'end',
+    });
   });
 }
 

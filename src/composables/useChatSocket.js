@@ -1,11 +1,28 @@
 import { io } from 'socket.io-client'
-import { ref, onUnmounted, readonly } from 'vue'
+import { ref, readonly } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 
 const WS_PATH = import.meta.env.VITE_WS_PATH
 const RECONNECT_INTERVAL = 3000
 const HEARTBEAT_INTERVAL = 15000
 const MAX_RECONNECT_ATTEMPTS = 10
+const PENDING_KEY = 'chat_pending_messages'
+
+function loadPending() {
+  try {
+    return JSON.parse(sessionStorage.getItem(PENDING_KEY) || '[]')
+  } catch {
+    return []
+  }
+}
+
+function savePending(messages) {
+  if (messages.length > 0) {
+    sessionStorage.setItem(PENDING_KEY, JSON.stringify(messages))
+  } else {
+    sessionStorage.removeItem(PENDING_KEY)
+  }
+}
 
 /**
  * @typedef {Object} ChatSocketOptions
@@ -41,7 +58,7 @@ export function useChatSocket() {
   let socket = null
   let heartbeatTimer = null
   let reconnectAttempts = 0
-  let pendingMessages = []
+  let pendingMessages = loadPending()
   let isIntentionalDisconnect = false
   let reconnectTimer = null
 
@@ -85,9 +102,7 @@ export function useChatSocket() {
   function connect(callbacks) {
     _callbacks = callbacks
 
-    if (socket?.connected) {
-      socket.disconnect()
-    }
+    disconnect(true)
 
     isIntentionalDisconnect = false
     clearTimeout(reconnectTimer)
@@ -139,8 +154,9 @@ export function useChatSocket() {
         return
       }
 
-      const pending = [...pendingMessages]
+      const pending = [...loadPending(), ...pendingMessages]
       pendingMessages = []
+      savePending([])
       pending.forEach((item) => {
         doSendMessage(item.content, item.messageId)
       })
@@ -180,6 +196,7 @@ export function useChatSocket() {
     const sent = doSendMessage(content, messageId)
     if (!sent) {
       pendingMessages.push({ content, messageId })
+      savePending(pendingMessages)
     }
     return messageId
   }
@@ -201,27 +218,29 @@ export function useChatSocket() {
     }
   }
 
-  function disconnect() {
+  function disconnect(silent = false) {
     isIntentionalDisconnect = true
-    pendingMessages = []
+    if (!silent) {
+      pendingMessages = []
+      savePending([])
+    }
     stopHeartbeat()
     clearTimeout(reconnectTimer)
     if (socket) {
+      socket.removeAllListeners()
       socket.disconnect()
       socket = null
     }
-    currentUserId.value = null
-    isLogin.value = false
-    _callbacks = null
+    if (!silent) {
+      currentUserId.value = null
+      isLogin.value = false
+      _callbacks = null
+    }
   }
 
   function isConnected() {
     return socket?.connected ?? false
   }
-
-  onUnmounted(() => {
-    disconnect()
-  })
 
   return {
     connect,

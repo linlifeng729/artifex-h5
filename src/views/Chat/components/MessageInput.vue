@@ -6,10 +6,9 @@
       :style="focused
         ? 'border-color: rgba(60, 179, 113, 0.5); background: rgba(255, 255, 255, 0.15);'
         : 'border-color: rgba(255, 255, 255, 0.2); background: rgba(255, 255, 255, 0.1);'"
-      @focus="focused = true"
-      @blur="focused = false"
     >
       <van-field
+        ref="fieldRef"
         v-model="inputValue"
         type="textarea"
         :rows="1"
@@ -36,7 +35,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, nextTick } from 'vue';
 import { Field as VanField } from 'vant';
 
 const props = defineProps({
@@ -49,6 +48,7 @@ const props = defineProps({
 const emit = defineEmits(['send']);
 const focused = ref(false);
 const inputValue = ref('');
+const fieldRef = ref(null);
 
 const canSend = computed(() => {
   return (
@@ -63,6 +63,9 @@ function handleSend() {
   const content = inputValue.value.trim();
   inputValue.value = '';
   emit('send', content);
+  nextTick(() => {
+    fieldRef.value?.focus();
+  });
 }
 </script>
 

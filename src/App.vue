@@ -4,7 +4,7 @@ import { useRoute } from 'vue-router';
 import { initOnlineCount } from '@/composables/useOnlineCount';
 
 const route = useRoute();
-const shouldKeepAlive = computed(() => !route.meta.keepAlive);
+const shouldKeepAlive = computed(() => !!route.meta.keepAlive);
 
 onMounted(() => {
   initOnlineCount();
