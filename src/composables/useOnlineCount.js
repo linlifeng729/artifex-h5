@@ -25,7 +25,7 @@ function connectForOnlineCount() {
 
   countSocket = io(WS_PATH, {
     namespace: WS_PATH,
-    transports: ['polling', 'websocket'],
+    transports: ['websocket'],
     reconnection: false,
     auth: { token },
   });
